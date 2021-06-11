@@ -1,0 +1,3 @@
+[submodule "src/components/bootstrap"]
+	path = src/components/bootstrap
+	url = git@github.com:yambal/React-Bootstrap.git
