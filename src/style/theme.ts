@@ -34,7 +34,15 @@ export const theme = {
   spaces: {
     s05: '0.5rem',
     s10: '1rem'
-  }
+  },
+
+  screens: {
+    _: 0,
+    sm: '576px',
+    md: '768px',
+    lg: '992px',
+    xl: '1200px'
+  },
 }
 
 export type AppTheme = typeof theme
