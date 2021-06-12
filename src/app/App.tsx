@@ -7,15 +7,29 @@ import {
   Link 
 } from 'react-router-dom'
 import { CounterContainer } from '../features/counter/CounterContainer'
-import { HomeContainer } from '../features/home/ComeContainer'
+import { DashboadContainer } from '../features/home/DashboadContainer'
+import { SuspenseComtainer } from '../features/sandbox/suspence/SuspenseComtainer'
+import { Nav, NavBar, NavItem } from '../components/bootstrap'
+import { x } from '@xstyled/styled-components'
+import { SandboxContainer } from '../features/sandbox/SandboxContainer'
 
 export const App: React.FC = () => {
   return (
     <Router>
-      <Switch>
-        <Route path="/counter" component={() => <CounterContainer />} />
-        <Route path="/" component={() => <HomeContainer />} />
-      </Switch>
+      <NavBar fixedTop dark>
+        <Nav>
+          <NavItem><Link to="/">Home</Link></NavItem>
+          <NavItem><Link to="/counter">カウンタ</Link></NavItem>
+          <NavItem><Link to="/sandbox">Sandbox</Link></NavItem>
+        </Nav>
+      </NavBar>
+      <x.div mt="56px">
+        <Switch>
+          <Route path="/counter" component={() => <CounterContainer />} />
+          <Route path="/sandbox" component={() => <SandboxContainer />} />
+          <Route path="/" component={() => <DashboadContainer />} />
+        </Switch>
+      </x.div>
     </Router>
   )
 }
