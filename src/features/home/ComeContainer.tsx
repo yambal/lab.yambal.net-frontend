@@ -1,12 +1,17 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Container } from '../../components/bootstrap'
-import { NavBar } from '../../components/bootstrap/src/layout/Navbar'
+import { Nav, NavBar, NavItem } from '../../components/bootstrap/'
 
 export const HomeContainer = () => {
   return (
     <div>
-      <NavBar>Hello</NavBar>
+      <NavBar fixedTop primary>
+        <Nav>
+          <NavItem><Link to="/counter">カウンタ</Link></NavItem>
+          <NavItem><Link to="/counter">カウンタ</Link></NavItem>
+        </Nav>
+      </NavBar>
       <Container>
         <h1>やぁ、世界</h1>
         <p>いろはにおへどちりぬるを</p>
