@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom'
 import { Container, Nav, NavBar, NavItem } from '../../components/bootstrap'
 import { SuspenseComtainer } from './suspence/SuspenseComtainer'
+import { UseTransitionComtainer } from './suspence/UseTransitionComtainer'
 
 export const SandboxContainer = () => {
   let match = useRouteMatch()
@@ -17,10 +18,12 @@ export const SandboxContainer = () => {
       <NavBar primary>
         <Nav>
           <NavItem><Link to="/sandbox/suspense">Suspense</Link></NavItem>
+          <NavItem><Link to="/sandbox/usetransition">useTransition</Link></NavItem>
         </Nav>
       </NavBar>
       <Switch>
         <Route path={`${match.path}/suspense`} component={() => <SuspenseComtainer />} />
+        <Route path={`${match.path}/usetransition`} component={() => <UseTransitionComtainer />} />
         <Route path={`${match.path}/`}>
           <Container>
             <x.h2>Sandbox</x.h2>

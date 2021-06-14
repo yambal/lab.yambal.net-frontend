@@ -6,6 +6,6 @@
     "jsx": "react",
     "moduleResolution": "node",
     "lib": ["ES2020","DOM"],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
   },
 }
