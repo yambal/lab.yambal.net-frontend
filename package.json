@@ -8,6 +8,7 @@
     "react-redux": "^7.2.4",
     "react-router-dom": "^5.2.0",
     "react-use": "^17.2.4",
+    "recoil": "^0.3.1",
     "skyway-js": "^4.4.1",
     "styled-components": "^5.3.0",
     "ts-loader": "^9.2.3",

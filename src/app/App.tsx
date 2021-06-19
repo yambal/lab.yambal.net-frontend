@@ -12,7 +12,7 @@ import { SuspenseComtainer } from '../features/sandbox/suspence/SuspenseComtaine
 import { Nav, NavBar, NavItem } from '../components/bootstrap'
 import { x } from '@xstyled/styled-components'
 import { SandboxContainer } from '../features/sandbox/SandboxContainer'
-import { RoomContainer } from '../features/room/RoomContainer'
+import { PeerContainer } from '../features/room/PeerContainer'
 
 export const App: React.FC = () => {
   return (
@@ -27,7 +27,7 @@ export const App: React.FC = () => {
       </NavBar>
       <x.div mt="56px">
         <Switch>
-          <Route path="/room" component={() => <RoomContainer />} />
+          <Route path="/room" component={() => <PeerContainer />} />
           <Route path="/counter" component={() => <CounterContainer />} />
           <Route path="/sandbox" component={() => <SandboxContainer />} />
           <Route path="/" component={() => <DashboadContainer />} />
