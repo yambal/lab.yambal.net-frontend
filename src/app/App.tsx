@@ -12,6 +12,7 @@ import { SuspenseComtainer } from '../features/sandbox/suspence/SuspenseComtaine
 import { Nav, NavBar, NavItem } from '../components/bootstrap'
 import { x } from '@xstyled/styled-components'
 import { SandboxContainer } from '../features/sandbox/SandboxContainer'
+import { RoomContainer } from '../features/room/RoomContainer'
 
 export const App: React.FC = () => {
   return (
@@ -21,10 +22,12 @@ export const App: React.FC = () => {
           <NavItem><Link to="/">Home</Link></NavItem>
           <NavItem><Link to="/counter">カウンタ</Link></NavItem>
           <NavItem><Link to="/sandbox">Sandbox</Link></NavItem>
+          <NavItem><Link to="/room">Rooom</Link></NavItem>
         </Nav>
       </NavBar>
       <x.div mt="56px">
         <Switch>
+          <Route path="/room" component={() => <RoomContainer />} />
           <Route path="/counter" component={() => <CounterContainer />} />
           <Route path="/sandbox" component={() => <SandboxContainer />} />
           <Route path="/" component={() => <DashboadContainer />} />
