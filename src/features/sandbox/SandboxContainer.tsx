@@ -8,8 +8,8 @@ import {
   useRouteMatch,
 } from 'react-router-dom'
 import { Container, Nav, NavBar, NavItem } from '../../components/bootstrap'
-import { SuspenseComtainer } from './suspence/SuspenseComtainer'
-import { UseTransitionComtainer } from './suspence/UseTransitionComtainer'
+import { SuspenceContainer2 } from './suspence/SuspenceContainer2'
+import { UseTransitionContainer } from './suspence/UseTransitionContainer'
 
 export const SandboxContainer = () => {
   let match = useRouteMatch()
@@ -22,8 +22,8 @@ export const SandboxContainer = () => {
         </Nav>
       </NavBar>
       <Switch>
-        <Route path={`${match.path}/suspense`} component={() => <SuspenseComtainer />} />
-        <Route path={`${match.path}/usetransition`} component={() => <UseTransitionComtainer />} />
+        <Route path={`${match.path}/suspense`} component={() => <SuspenceContainer2 />} />
+        <Route path={`${match.path}/usetransition`} component={() => <UseTransitionContainer />} />
         <Route path={`${match.path}/`}>
           <Container>
             <x.h2>Sandbox</x.h2>
