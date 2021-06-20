@@ -1,5 +1,25 @@
 import { atom, useRecoilState } from 'recoil'
+import Peer from 'skyway-js';
 
+export const peerState = atom<Peer | undefined>({
+  key: "peer",
+  default: undefined,
+});
+
+export type RoomMember = {
+  name: string
+}
+
+export type RoomMemberState = {
+  [peerId: string]: RoomMember
+}
+
+export const roomMembersState = atom<RoomMemberState>({
+  key: "roomRoomMembers",
+  default: {}
+});
+
+/*
 export const peerIsOpenState = atom<boolean>({
   key: "peerIsOpen",
   default: false,
@@ -16,21 +36,7 @@ export const roomIsOpenState = atom<boolean>({
 });
 
 
-export type RoomMember = {
-  name: string
-  peerId: string
-  position: {
-    x: number
-    y: number
-  }
-}
 
 
-export type RoomMemberState = {
-  [peerId: string]: RoomMember
-}
 
-export const roomMembersState = atom<RoomMemberState>({
-  key: "roomRoomMembers",
-  default: {}
-});
+*/
