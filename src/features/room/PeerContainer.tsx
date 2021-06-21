@@ -20,7 +20,7 @@ export const PeerContainer: React.FC<PeerContainerProps> = React.forwardRef(func
   const [peer, setPeer] = useState<Peer>()
 
   useMount(() => {
-    const _peer = new Peer({key: 'd7be2df2-a221-4b31-8777-4911bece8381', debug: 0});
+    const _peer = new Peer({key: '42f75ed0-a9ff-4f07-ad83-cecc2daa274c', debug: 0});
     _peer.on('open', ()=> {
       onPeerOpen(_peer)
     });
