@@ -24,7 +24,9 @@ export const UseTransitionContainer = () => {
   });
   return (
     <Container>
+      <div>pending : {isPending ? 'yes' : 'no'}</div>
       <button
+        disabled={isPending}
         onClick={() => {
           startTransition(() => {
             const nextUserId = getNextId(
