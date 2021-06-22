@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SystemProps, x } from '@xstyled/styled-components'
-import { PeerContainer } from './PeerContainer'
+import { SkyeayRoot } from './SkywayRoot'
 import { MeshRoomContainer } from './MeshRoomContainer'
 import Peer from 'skyway-js';
-
-let __peer: Peer | undefined
 
 type PlaceContainerProps = SystemProps & {
 
@@ -18,24 +16,9 @@ export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(fu
 ) {
   const [peer, setPeer] = useState<Peer | undefined>(undefined)
 
-  const onPeer = useCallback((_peer: Peer) => {
-    __peer = _peer
-    setPeer(__peer)
-  },[])
-
   return (
-    <x.div
-      ref={ref}
-      {...restProps}
-    >
-      <PeerContainer
-        onPeer={onPeer}
-        bg="#CCCCCC"
-      />
-      <MeshRoomContainer
-        peer={peer}
-        roomId="2nd"
-      />
-    </x.div>
+    <SkyeayRoot onPeer={setPeer}>
+      <MeshRoomContainer peer={peer} roomId="3rd" />
+    </SkyeayRoot>
   )
 })
