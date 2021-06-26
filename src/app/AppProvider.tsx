@@ -13,12 +13,10 @@ type ProviderProps = {
 export function AppProvider({ children }: ProviderProps) {
   return (
     <Provider store={store}>
-      <RecoilRoot>
       <ThemeProvider theme={theme}>
         <GlobalStyle />
           {children}
       </ThemeProvider>
-      </RecoilRoot>
     </Provider>
   )
 }
