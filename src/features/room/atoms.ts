@@ -1,6 +1,8 @@
-import { atom, useRecoilState } from 'recoil'
-import Peer from 'skyway-js';
+import { atom, atomFamily, selector, selectorFamily, useRecoilState } from 'recoil'
+import Peer, { MeshRoom } from 'skyway-js';
+import { MeshRoomMember, MeshRoomMembers } from './root/wrapper/meshRoomWrapper';
 
+/*
 export const peerState = atom<Peer | undefined>({
   key: "peer",
   default: undefined,
@@ -9,34 +11,41 @@ export const peerState = atom<Peer | undefined>({
 export type RoomMember = {
   name: string
 }
+*/
+export const peerUserNameLabelState = atom<string>({
+  key: "peerUserNameLabel",
+  default: undefined
+})
 
-export type RoomMemberState = {
-  [peerId: string]: RoomMember
-}
-
-export const roomMembersState = atom<RoomMemberState>({
-  key: "roomRoomMembers",
+/*
+export const meshRoomMembersState = atom<MeshRoomMembers>({
+  key: "meshRoomMembers",
   default: {}
+});
+*/
+
+export const meshRoomIdState = atom<string>({
+  key: "meshRoomId",
+  default: undefined
+});
+
+export const meshRoomMemberIdsState = atom<string[]>({
+  key: 'meshRoomMemberIds',
+  default: []
+});
+
+//
+export const meshRoomMemberStateByPeerId = atomFamily<MeshRoomMember, string>({
+  key: "roomMemberFamiky",
+  default: undefined
 });
 
 /*
-export const peerIsOpenState = atom<boolean>({
-  key: "peerIsOpen",
-  default: false,
-});
-
-export const peerMyPeerIdState = atom<string | undefined>({
-  key: "peerMyPeerId",
-  default: undefined,
-});
-
-export const roomIsOpenState = atom<boolean>({
-  key: "RoomrIsOpen",
-  default: false,
-});
-
-
-
-
-
+export const stateTodos = selector<Todo[]>({
+  key: "state-todos",
+  get: ({ get }) => {
+    const todoIds = get(stateTodoIds);
+    return todoIds.map((todoId) => get(stateTodo(todoId)));
+  },
+}
 */
