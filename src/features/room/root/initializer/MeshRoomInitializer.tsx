@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, Fragment } from 'react';
 import { useUnmount } from 'react-use';
-import { useRecoilCallback, useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useSetRecoilState } from 'recoil';
 import Peer, { MeshRoom } from 'skyway-js'
 import { meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId } from '../../atoms'
-import { ExMeshRoom, MeshRoomMembers, meshRoomWrapper } from '../wrapper/meshRoomWrapper';
+import { ExMeshRoom, MeshRoomMemberInfo, MeshRoomMembers, meshRoomWrapper } from '../wrapper/meshRoomWrapper';
 
 type RoomData = {
   dataType: 'ping' | 'res_ping'
@@ -28,7 +28,8 @@ export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel}:MeshRoomCo
     if(peer){
       meshRoomWrapper(peer, roomId, {
         onRoomClose,
-        onRoomMemberChange
+        onRoomMemberChange,
+        onPeerMemberInfoChange
       }).then((room) => {
         __room = room
         setRoom(__room)
@@ -45,21 +46,10 @@ export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel}:MeshRoomCo
   },[peerUserNameLabel, room])
 
   // Room のメンバーに変更があった時
-  const onRoomMemberChange = useRecoilCallback(({ set, snapshot }) => async(meshRoomMembers: MeshRoomMembers) => {
+  const onRoomMemberChange = useRecoilCallback(({ set }) => (meshRoomMembers: MeshRoomMembers) => {
     const newPeerIds = Object.keys(meshRoomMembers)
 
-    // 変更前のPeerId リスト
-    let oldPeerIds = await snapshot.getLoadable(meshRoomMemberIdsState).toPromise()
-    // 差分
-    const diff = newPeerIds.filter(
-      newPeerId => !oldPeerIds.includes( newPeerId )
-    ).length + oldPeerIds.filter(
-      oldPeerId => !newPeerIds.includes( oldPeerId )
-    ).length
-    if(diff != 0) {
-      // 差分があれば PeerId リスト更新
-      setMeshRoomMemberPeerIds(newPeerIds)
-    }
+    setMeshRoomMemberPeerIds(newPeerIds)
     
     // MeshRoomMember を peerId で確認する
     // const member = useRecoilValue(meshRoomMemberStateByPeerId(peerId));
@@ -67,6 +57,11 @@ export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel}:MeshRoomCo
       set(meshRoomMemberStateByPeerId(newPeerId), meshRoomMembers[newPeerId]);
     })
   });
+
+  // Room のメンバーの情報に変更があった時
+  const onPeerMemberInfoChange = useRecoilCallback(({ set }) => (peerId: string, meshRoomMember: MeshRoomMemberInfo) => {
+    set(meshRoomMemberStateByPeerId(peerId), meshRoomMember);
+  })
 
   // ルームが閉じられたとき
   const onRoomClose = useCallback(() => {
