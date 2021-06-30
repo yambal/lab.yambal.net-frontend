@@ -23,33 +23,9 @@ export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWra
 
       // 拡張 : meshRoom.exMethod として meshRoom を拡張する
       const exMeshRoom: ExMeshRoom = room
-      exMeshRoom['exMethod'] = roomExtention(room, {
+      exMeshRoom['exMethod'] = roomExtention(room, peer.id, {
         onMeshRoomMemberChange: option.onRoomMemberChange,
         onMeshRoomMemberInfoChange: option.onPeerMemberInfoChange
-      })
-
-      // Member
-      /** TODO:　**/
-      exMeshRoom.on('data', ({ src, data }) => {
-        if(data.dataType && data.to){
-          switch(`${data.dataType}-${data.to}`){
-            case 'ping-all': 
-              const ping_res_data:any = {
-                dataType: 'res_ping',
-                to: src,
-                name: exMeshRoom.exMethod.getMyName()
-              }
-              exMeshRoom.send(ping_res_data)
-              exMeshRoom.exMethod && exMeshRoom.exMethod.addMember(src, {name: data.name})
-              break;
-            case `res_ping-${peer.id}`:
-              exMeshRoom.exMethod && exMeshRoom.exMethod.addMember(src, {name: data.name})
-              break;
-            case `change_name-all`:
-              exMeshRoom.exMethod && exMeshRoom.exMethod.changeMemberName(src, data.name)
-              break;
-          }
-        }
       })
 
       resolve(
@@ -59,7 +35,6 @@ export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWra
   })
 
 }
-
 
 /**
  * roomExtention
@@ -87,14 +62,37 @@ type ExMethods = {
   getMyName: () => string
 }
 
-type RoomExtention = (room: MeshRoom, option?: {
+type RoomExtention = (room: MeshRoom, peerId: string, option?: {
   onMeshRoomMemberChange?: (meshRoomMembers: MeshRoomMembers)=> void
   onMeshRoomMemberInfoChange?: (peerId: string, meshRoomMember: MeshRoomMemberInfo)=> void
 }) => ExMethods
 
-const roomExtention: RoomExtention = (room, option?) => {
+const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   let meshRoomMembers: MeshRoomMembers = {}
   let __myName: string = ''
+
+  // Member
+  room.on('data', ({ src, data }) => {
+    if(data.dataType && data.to){
+      switch(`${data.dataType}-${data.to}`){
+        case 'ping-all': 
+          const ping_res_data:LibSendData = {
+            dataType: 'res_ping',
+            to: src,
+            name: getMyName()
+          }
+          room.send(ping_res_data)
+          addMember(src, {name: data.name})
+          break;
+        case `res_ping-${peerId}`:
+          addMember(src, {name: data.name})
+          break;
+        case `change_name-all`:
+          changeMemberName(src, data.name)
+          break;
+      }
+    }
+  })
 
   // 退室メンバー処理
   room.on('peerLeave', peerId => {
@@ -121,7 +119,7 @@ const roomExtention: RoomExtention = (room, option?) => {
   // 自身の名前をセットする
   const setMyName = (myName: string) => {
     __myName = myName
-    const change_name_data:any = {
+    const change_name_data:LibSendData = {
       dataType: 'change_name',
       to: 'all',
       name: myName
@@ -147,7 +145,7 @@ const roomExtention: RoomExtention = (room, option?) => {
   }
 
   // Ping 送信
-  const data:any = {
+  const data:LibSendData = {
     dataType: "ping",
     to: 'all',
     name: getMyName()
@@ -161,6 +159,14 @@ const roomExtention: RoomExtention = (room, option?) => {
     changeMemberName,
     getMyName
   }
+}
+
+// ライブラリが送信するデータ
+type LibSendDataDataType = 'ping' | 'res_ping' | 'res_ping' | 'change_name'
+type LibSendData = {
+  dataType: LibSendDataDataType
+  to: 'all' | string
+  name: string
 }
 
 /**
