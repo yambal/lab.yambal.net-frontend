@@ -1,4 +1,3 @@
-import { constSelector } from "recoil"
 import Peer, { MeshRoom } from "skyway-js"
 
 /**
@@ -13,21 +12,21 @@ import Peer, { MeshRoom } from "skyway-js"
  type MeshRoomWrapperOption = {
   stream?: MediaStream
   myName?: string
-  startPosition?: Position
+  startPosition?: ExMemberPosition
   onRoomClose?: () => void
-  onRoomMemberChange? : (meshRoomMembses: MeshRoomMembers) => void
-  onPeerMemberInfoChange? : (peerId: string, meshRoomMember: MeshRoomMemberInfo) => void
+  onRoomMemberChange? : (meshRoomMembses: ExMembers) => void
+  onPeerMemberInfoChange? : (peerId: string, meshRoomMember: ExMember) => void
   onMeshRoomData?: (src: string, data: {}) => void
 }
 
-export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWrapperOption): Promise<ExMeshRoom> => {
+export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: MeshRoomWrapperOption): Promise<ExMeshRoom> => {
   return new Promise((resolve, reject) => {
     meshRoomOpener(peer, roomId, option?.stream).then((room) => {
       option?.onRoomClose && room.on('close', option?.onRoomClose)
 
       // 拡張 : meshRoom.exMethod として meshRoom を拡張する
       const exMeshRoom: ExMeshRoom = room
-      exMeshRoom['exMethod'] = roomExtention(room, peer.id, {
+      exMeshRoom['ex'] = roomExtention(room, peer.id, {
         myName: option?.myName,
         startPosition: option?.startPosition,
         onMeshRoomMemberChange: option.onRoomMemberChange,
@@ -40,7 +39,6 @@ export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWra
       )
     })
   })
-
 }
 
 /**
@@ -49,75 +47,99 @@ export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWra
  * @param option 
  * @returns 
  */
-export type MeshRoomMembers = {
-  [peerId: string]: MeshRoomMemberInfo
+
+// ライブラリ内で管理するメンバーリスト
+export type ExMembers = {
+  [peerId: string]: ExMember
 }
 
-export type MeshRoomMemberInfo = {
+// ライブラリ内で管理するメンバー
+export type ExMember = {
   name: string
-  position?: Position
+  position?: ExMemberPosition
 }
 
-export type Position = {
+export type ExMemberPosition = {
   x: number
   y: number
   z: number
 }
 
 export type ExMeshRoom = MeshRoom & {
-  exMethod?: ExMethods
+  ex?: ExMethods
 }
 
 type ExMethods = {
-  addMember: (peerId: string, meshRoomMember: MeshRoomMemberInfo) => void
+  addMember: (peerId: string, meshRoomMember: ExMember) => void
   removeMember: (peerId: string) => void
   setMyName: (name: string) => void
   changeMemberName: (peerId: string, name: string) => void
   getMyName: () => string,
-  moveTo: (position: Position) => void
+  moveTo: (position: ExMemberPosition) => void,
+  sendPing: () => void
 }
 
 type RoomExtention = (room: MeshRoom, peerId: string, option?: {
   myName?: string
-  startPosition?: Position
-  onMeshRoomMemberChange?: (meshRoomMembers: MeshRoomMembers)=> void
-  onMeshRoomMemberInfoChange?: (peerId: string, meshRoomMember: MeshRoomMemberInfo)=> void
+  startPosition?: ExMemberPosition
+  onMeshRoomMemberChange?: (meshRoomMembers: ExMembers)=> void
+  onMeshRoomMemberInfoChange?: (peerId: string, meshRoomMember: ExMember)=> void
   onMeshRoomData?: (src: string, data: {}) => void
 }) => ExMethods
 
-const roomExtention: RoomExtention = (room, peerId: string, option?) => {
-  let meshRoomMembers: MeshRoomMembers = {}
-  let __myName: string = option?.myName || ''
-  let __myPosition: Position = option.startPosition
+// ライブラリが送信するデータ
+type LibSendDataDataType = 'ping' | 'res_ping' | 'res_ping' | 'change_name' | 'move_to'
+type LibSendData = {
+  dataType: LibSendDataDataType
+  to: 'all' | string
+  name?: string
+  position?: ExMemberPosition
+}
 
-  const onData = ({ src, data }) => {
+const roomExtention: RoomExtention = (room, peerId: string, option?) => {
+  let meshRoomMembers: ExMembers = {}
+  let __myName: string = option?.myName || ''
+  let __myPosition: ExMemberPosition = option.startPosition
+
+  // on data : 他のユーザーから送信されたデータを受信した時に発生します。
+  room.on('data', ({ src, data }) => {
+    onData(src, data)
+  })
+
+  // on peerLeave : 新規に Peer がルームを退出したときに発生します。
+  room.on('peerLeave', peerId => {
+    removeMember(peerId)
+  })
+
+  // =============================================================================
+  const onData = (src, data) => {
     if(data.dataType && data.to){
-      
       const recieveLibSendData: LibSendData = data
       if(recieveLibSendData.to === 'all' || recieveLibSendData.to === peerId){ 
         switch(`${recieveLibSendData.dataType}`){
           case 'ping': 
-            const ping_res_data:LibSendData = {
-              dataType: 'res_ping',
-              to: src,
-              name: getMyName()
+            // Pingを受信
+            resPing(src)
+            const addM:ExMember = {
+              name: recieveLibSendData.name,
+              position: recieveLibSendData.position
             }
-            room.send(ping_res_data)
-            addMember(src, {
-              name: data.name,
-              position: __myPosition
-            })
+            addMember(src, addM)
             break;
           case `res_ping`:
-            addMember(src, {
-              name: data.name,
-              position: __myPosition
-            })
+            // Ping応答を受信
+            const resM:ExMember = {
+              name: recieveLibSendData.name,
+              position: recieveLibSendData.position
+            }
+            addMember(src, resM)
             break;
           case `change_name`:
+            // 名前変更を受信
             changeMemberName(src, data.name)
             break;
           case 'move_to':
+            // 移動を受信
             changeMemberPosition(src, data.position)
             break;
         }
@@ -127,16 +149,8 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     }
   }
 
-  // Member
-  room.on('data', onData)
-
-  // 退室メンバー処理
-  room.on('peerLeave', peerId => {
-    removeMember(peerId)
-  })
-
-  // ユーザーを追加する
-  const addMember = (peerId: string, meshRoomMember: MeshRoomMemberInfo) => {
+  // メンバーを追加する
+  const addMember = (peerId: string, meshRoomMember: ExMember) => {
     const add = {}
     add[peerId] = meshRoomMember
     const newMembers = Object.assign({}, meshRoomMembers, add)
@@ -144,23 +158,12 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     option.onMeshRoomMemberChange && option.onMeshRoomMemberChange(newMembers)
   }
 
-  // ユーザーを削除する
+  // メンバーを削除する
   const removeMember = (peerId: string) => {
     const newMembers = Object.assign({}, meshRoomMembers)
     delete newMembers[peerId]
     meshRoomMembers = newMembers
     option.onMeshRoomMemberChange && option.onMeshRoomMemberChange(newMembers)
-  }
-
-  // 自身の名前をセットする
-  const setMyName = (myName: string) => {
-    __myName = myName
-    const change_name_data:LibSendData = {
-      dataType: 'change_name',
-      to: 'all',
-      name: myName
-    }
-    room.send(change_name_data)
   }
 
   // メンバーの名前を変更する
@@ -174,7 +177,8 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     option.onMeshRoomMemberInfoChange && option.onMeshRoomMemberInfoChange(peerId, old)
   }
   
-  const changeMemberPosition = (peerId: string, position: Position) => {
+  // メンバーの座標を変更する
+  const changeMemberPosition = (peerId: string, position: ExMemberPosition) => {
     const old = Object.assign({}, meshRoomMembers[peerId], {position})
     const newP = {}
     newP[peerId] = old
@@ -184,26 +188,62 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     option.onMeshRoomMemberInfoChange && option.onMeshRoomMemberInfoChange(peerId, old)
   }
 
-  const getMyName = () => {
-    return __myName
+  // 通信
+  // Ping 送信
+  const sendPing = () => {
+    const data:LibSendData = {
+      dataType: "ping",
+      to: 'all',
+      name: getMyName()
+    }
+    room.send(data)
   }
 
-  const moveTo = (position: Position) => {
+  // Ping に応答する
+  const resPing = (to: string) => {
+    const ping_res_data:LibSendData = {
+      dataType: 'res_ping',
+      to: to,
+      name: getMyName(),
+      position: getMyPosision()
+    }
+    room.send(ping_res_data)
+  }
+
+  const moveTo = (position: ExMemberPosition) => {
     const moveTo_data:LibSendData = {
       dataType: 'move_to',
       to: 'all',
       position
     }
+    __myPosition = position
     room.send(moveTo_data)
   }
 
-  // Ping 送信
-  const data:LibSendData = {
-    dataType: "ping",
-    to: 'all',
-    name: getMyName()
+  const sendMyName = (myName: string) => {
+    const change_name_data:LibSendData = {
+      dataType: 'change_name',
+      to: 'all',
+      name: myName
+    }
+    room.send(change_name_data)
   }
-  room.send(data)
+
+  // 自身の名前をセットする
+  const setMyName = (myName: string) => {
+    __myName = myName
+    sendMyName(myName)
+  }
+
+  const getMyName = () => {
+    return __myName
+  }
+
+  const getMyPosision = () => {
+    return __myPosition
+  }
+
+  sendPing()
 
   return {
     addMember,
@@ -211,19 +251,12 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     setMyName,
     changeMemberName,
     getMyName,
-    moveTo
+    moveTo,
+    sendPing
   }
 }
 
-// ライブラリが送信するデータ
-type LibSendDataDataType = 'ping' | 'res_ping' | 'res_ping' | 'change_name' | 'move_to'
-type LibSendData = {
-  dataType: LibSendDataDataType
-  to: 'all' | string
-  name?: string
-  position?: Position
-}
-
+// =============================================================================
 /**
  * meshRoomOpener
  * new peer.joinRoom を Promise 化したもの

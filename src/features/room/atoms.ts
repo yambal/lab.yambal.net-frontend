@@ -1,6 +1,6 @@
 import { atom, atomFamily, selector, selectorFamily, useRecoilState } from 'recoil'
 import Peer, { MeshRoom } from 'skyway-js';
-import { MeshRoomMemberInfo, MeshRoomMembers, Position } from './root/wrapper/meshRoomWrapper';
+import { ExMember, ExMembers, ExMemberPosition } from './root/wrapper/meshRoomWrapper';
 
 export const peerUserNameLabelState = atom<string>({
   key: "peerUserNameLabel",
@@ -19,12 +19,12 @@ export const meshRoomMemberIdsState = atom<string[]>({
 });
 
 //
-export const meshRoomMemberStateByPeerId = atomFamily<MeshRoomMemberInfo, string>({
+export const meshRoomMemberStateByPeerId = atomFamily<ExMember, string>({
   key: "roomMemberFamiky",
   default: undefined
 });
 
-export const meshRoomMyPositionState = atom<Position>({
+export const meshRoomMyPositionState = atom<ExMemberPosition>({
   key: 'meshRoomMyPosition',
   default: {
     x: 0,

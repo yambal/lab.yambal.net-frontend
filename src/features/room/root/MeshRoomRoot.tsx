@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { RecoilRoot, useRecoilState } from "recoil"
+import React, { ReactNode } from 'react';
+import { RecoilRoot, useRecoilValue } from "recoil"
 import Peer from 'skyway-js';
-import { meshRoomMyPositionState, peerUserNameLabelState } from '../atoms';
+import { peerUserNameLabelState } from '../atoms';
 import { MeshRoomInitializer } from './initializer/MeshRoomInitializer';
 
 type MeshRoomRootProps = {
@@ -11,15 +11,14 @@ type MeshRoomRootProps = {
 }
 
 export const MeshRoomRoot = ({peer, roomId, children}: MeshRoomRootProps) => {
-  const [peerUserNameLabel, setPeerUserNameLabel] = useRecoilState(peerUserNameLabelState)
+  const peerUserNameLabel = useRecoilValue(peerUserNameLabelState)
   
-
   return (
     <RecoilRoot>
       <MeshRoomInitializer
         peer={peer}
         roomId={roomId}
-        peerUserNameLabel={peerUserNameLabel}
+        myName={peerUserNameLabel}
         startPosition={{
           x: 0,
           y: 0,
