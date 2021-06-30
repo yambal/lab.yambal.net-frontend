@@ -24,6 +24,8 @@ export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(fu
     setPeer(__peer)
   },[])
 
+  console.log(`xxx render PlaceContainer xxx`)
+
   return (
     <x.div
       ref={ref}

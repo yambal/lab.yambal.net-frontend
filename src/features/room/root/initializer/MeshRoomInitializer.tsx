@@ -1,15 +1,9 @@
 import React, { useState, useEffect, useCallback, Fragment } from 'react';
 import { useUnmount } from 'react-use';
-import { useRecoilCallback, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Peer, { MeshRoom } from 'skyway-js'
-import { meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId } from '../../atoms'
-import { ExMeshRoom, MeshRoomMemberInfo, MeshRoomMembers, meshRoomWrapper } from '../wrapper/meshRoomWrapper';
-
-type RoomData = {
-  dataType: 'ping' | 'res_ping'
-  to: string | 'all'
-  name: string
-}
+import { meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId, meshRoomMyPositionState } from '../../atoms'
+import { ExMeshRoom, MeshRoomMemberInfo, MeshRoomMembers, meshRoomWrapper, Position } from '../wrapper/meshRoomWrapper';
 
 let __room: MeshRoom | undefined = undefined;
 
@@ -17,19 +11,25 @@ type MeshRoomContainerProps = {
   peer: Peer | undefined
   roomId: string
   peerUserNameLabel: string
+  startPosition: Position
 }
 
-export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel}:MeshRoomContainerProps) => {
+export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel, startPosition }:MeshRoomContainerProps) => {
   const [room, setRoom] = useState<ExMeshRoom>()
   const setMeshRoomMemberPeerIds = useSetRecoilState(meshRoomMemberIdsState)
   const setMeshRoomId = useSetRecoilState(meshRoomIdState)
+  const myPosition = useRecoilValue(meshRoomMyPositionState)
 
   useEffect(() => {
     if(peer){
+      console.log(`■ MeshRoomInitializer ■`)
       meshRoomWrapper(peer, roomId, {
+        myName: peerUserNameLabel,
+        startPosition,
         onRoomClose,
         onRoomMemberChange,
-        onPeerMemberInfoChange
+        onPeerMemberInfoChange,
+        onMeshRoomData
       }).then((room) => {
         __room = room
         setRoom(__room)
@@ -44,6 +44,16 @@ export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel}:MeshRoomCo
       room.exMethod.setMyName(peerUserNameLabel)
     }
   },[peerUserNameLabel, room])
+
+  useEffect(() => {
+    if(room) {
+      room.exMethod.moveTo(myPosition)
+    }
+  },[myPosition, room])
+
+  const onMeshRoomData = useCallback((src: String, data: {}) => {
+
+  },[])
 
   // Room のメンバーに変更があった時
   const onRoomMemberChange = useRecoilCallback(({ set }) => (meshRoomMembers: MeshRoomMembers) => {
@@ -74,6 +84,8 @@ export const MeshRoomInitializer = ({peer, roomId, peerUserNameLabel}:MeshRoomCo
       room.close()
     }
   })
+
+  console.log('render')
 
   return (
     <Fragment />

@@ -1,3 +1,4 @@
+import { constSelector } from "recoil"
 import Peer, { MeshRoom } from "skyway-js"
 
 /**
@@ -11,9 +12,12 @@ import Peer, { MeshRoom } from "skyway-js"
 
  type MeshRoomWrapperOption = {
   stream?: MediaStream
+  myName?: string
+  startPosition?: Position
   onRoomClose?: () => void
   onRoomMemberChange? : (meshRoomMembses: MeshRoomMembers) => void
   onPeerMemberInfoChange? : (peerId: string, meshRoomMember: MeshRoomMemberInfo) => void
+  onMeshRoomData?: (src: string, data: {}) => void
 }
 
 export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWrapperOption): Promise<ExMeshRoom> => {
@@ -24,8 +28,11 @@ export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWra
       // 拡張 : meshRoom.exMethod として meshRoom を拡張する
       const exMeshRoom: ExMeshRoom = room
       exMeshRoom['exMethod'] = roomExtention(room, peer.id, {
+        myName: option?.myName,
+        startPosition: option?.startPosition,
         onMeshRoomMemberChange: option.onRoomMemberChange,
-        onMeshRoomMemberInfoChange: option.onPeerMemberInfoChange
+        onMeshRoomMemberInfoChange: option.onPeerMemberInfoChange,
+        onMeshRoomData: option.onMeshRoomData
       })
 
       resolve(
@@ -42,12 +49,19 @@ export const meshRoomWrapper = (peer: Peer, roomId: string, option?: MeshRoomWra
  * @param option 
  * @returns 
  */
- export type MeshRoomMembers = {
+export type MeshRoomMembers = {
   [peerId: string]: MeshRoomMemberInfo
 }
 
 export type MeshRoomMemberInfo = {
   name: string
+  position?: Position
+}
+
+export type Position = {
+  x: number
+  y: number
+  z: number
 }
 
 export type ExMeshRoom = MeshRoom & {
@@ -59,40 +73,62 @@ type ExMethods = {
   removeMember: (peerId: string) => void
   setMyName: (name: string) => void
   changeMemberName: (peerId: string, name: string) => void
-  getMyName: () => string
+  getMyName: () => string,
+  moveTo: (position: Position) => void
 }
 
 type RoomExtention = (room: MeshRoom, peerId: string, option?: {
+  myName?: string
+  startPosition?: Position
   onMeshRoomMemberChange?: (meshRoomMembers: MeshRoomMembers)=> void
   onMeshRoomMemberInfoChange?: (peerId: string, meshRoomMember: MeshRoomMemberInfo)=> void
+  onMeshRoomData?: (src: string, data: {}) => void
 }) => ExMethods
 
 const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   let meshRoomMembers: MeshRoomMembers = {}
-  let __myName: string = ''
+  let __myName: string = option?.myName || ''
+  let __myPosition: Position = option.startPosition
+
+  const onData = ({ src, data }) => {
+    if(data.dataType && data.to){
+      
+      const recieveLibSendData: LibSendData = data
+      if(recieveLibSendData.to === 'all' || recieveLibSendData.to === peerId){ 
+        switch(`${recieveLibSendData.dataType}`){
+          case 'ping': 
+            const ping_res_data:LibSendData = {
+              dataType: 'res_ping',
+              to: src,
+              name: getMyName()
+            }
+            room.send(ping_res_data)
+            addMember(src, {
+              name: data.name,
+              position: __myPosition
+            })
+            break;
+          case `res_ping`:
+            addMember(src, {
+              name: data.name,
+              position: __myPosition
+            })
+            break;
+          case `change_name`:
+            changeMemberName(src, data.name)
+            break;
+          case 'move_to':
+            changeMemberPosition(src, data.position)
+            break;
+        }
+      }
+    } else {
+      option.onMeshRoomData && option.onMeshRoomData(src, data)
+    }
+  }
 
   // Member
-  room.on('data', ({ src, data }) => {
-    if(data.dataType && data.to){
-      switch(`${data.dataType}-${data.to}`){
-        case 'ping-all': 
-          const ping_res_data:LibSendData = {
-            dataType: 'res_ping',
-            to: src,
-            name: getMyName()
-          }
-          room.send(ping_res_data)
-          addMember(src, {name: data.name})
-          break;
-        case `res_ping-${peerId}`:
-          addMember(src, {name: data.name})
-          break;
-        case `change_name-all`:
-          changeMemberName(src, data.name)
-          break;
-      }
-    }
-  })
+  room.on('data', onData)
 
   // 退室メンバー処理
   room.on('peerLeave', peerId => {
@@ -129,19 +165,36 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
 
   // メンバーの名前を変更する
   const changeMemberName = (peerId: string, name: string) => {
-    const changeMemberInfo: MeshRoomMemberInfo = {
-      name
-    }
-    let changeNameMembers = {}
-    changeNameMembers[peerId] = changeMemberInfo
-    const newMembers = Object.assign({}, meshRoomMembers, changeNameMembers)
+    const old = Object.assign({}, meshRoomMembers[peerId], {name})
+    const newP = {}
+    newP[peerId] = old
+    const newMembers = Object.assign({}, meshRoomMembers, newP)
     meshRoomMembers = newMembers
 
-    option.onMeshRoomMemberInfoChange && option.onMeshRoomMemberInfoChange(peerId, changeMemberInfo)
+    option.onMeshRoomMemberInfoChange && option.onMeshRoomMemberInfoChange(peerId, old)
+  }
+  
+  const changeMemberPosition = (peerId: string, position: Position) => {
+    const old = Object.assign({}, meshRoomMembers[peerId], {position})
+    const newP = {}
+    newP[peerId] = old
+    const newMembers = Object.assign({}, meshRoomMembers, newP)
+    meshRoomMembers = newMembers
+    __myPosition = position
+    option.onMeshRoomMemberInfoChange && option.onMeshRoomMemberInfoChange(peerId, old)
   }
 
   const getMyName = () => {
     return __myName
+  }
+
+  const moveTo = (position: Position) => {
+    const moveTo_data:LibSendData = {
+      dataType: 'move_to',
+      to: 'all',
+      position
+    }
+    room.send(moveTo_data)
   }
 
   // Ping 送信
@@ -157,16 +210,18 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     removeMember,
     setMyName,
     changeMemberName,
-    getMyName
+    getMyName,
+    moveTo
   }
 }
 
 // ライブラリが送信するデータ
-type LibSendDataDataType = 'ping' | 'res_ping' | 'res_ping' | 'change_name'
+type LibSendDataDataType = 'ping' | 'res_ping' | 'res_ping' | 'change_name' | 'move_to'
 type LibSendData = {
   dataType: LibSendDataDataType
   to: 'all' | string
-  name: string
+  name?: string
+  position?: Position
 }
 
 /**
