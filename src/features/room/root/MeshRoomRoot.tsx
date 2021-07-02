@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { RecoilRoot, useRecoilValue } from "recoil"
 import Peer from 'skyway-js';
-import { peerUserNameLabelState } from '../atoms';
+import { peerUserNameLabelState } from '../peerAtom';
 import { MeshRoomInitializer } from './initializer/MeshRoomInitializer';
 
 type MeshRoomRootProps = {

@@ -5,7 +5,7 @@ import { SystemProps, x } from '@xstyled/styled-components'
 import { peerWrapper } from '../wrapper/peerWrapper';
 import { useRecoilState } from 'recoil';
 
-import { peerUserNameLabelState } from '../../atoms';
+import { peerUserNameLabelState } from '../../peerAtom';
 
 let __peer: Peer | undefined
 

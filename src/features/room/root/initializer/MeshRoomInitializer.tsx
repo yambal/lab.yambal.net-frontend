@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, Fragment } from 'react';
+import React, { useState, useEffect, useCallback, Fragment, useTransition } from 'react';
 import { useUnmount } from 'react-use';
 import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
 import Peer, { MeshRoom } from 'skyway-js'
-import { meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId, meshRoomMyPositionState } from '../../atoms'
+import { meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId, meshRoomMyPositionState } from '../../peerAtom'
 import { ExMeshRoom, ExMember, ExMembers, exMeshRoomOpener, ExMemberPosition } from '../wrapper/meshRoomWrapper';
 
 let __room: MeshRoom | undefined = undefined;
@@ -19,6 +19,9 @@ export const MeshRoomInitializer = ({peer, roomId, myName, startPosition }:MeshR
   const setMeshRoomMemberPeerIds = useSetRecoilState(meshRoomMemberIdsState)
   const setMeshRoomId = useSetRecoilState(meshRoomIdState)
   const myPosition = useRecoilValue(meshRoomMyPositionState)
+  const [isPending, startTransition] = useTransition({
+    timeoutMs: 3000
+  });
 
   useEffect(() => {
     if(peer){
@@ -70,7 +73,9 @@ export const MeshRoomInitializer = ({peer, roomId, myName, startPosition }:MeshR
 
   // Room のメンバーの情報に変更があった時
   const onPeerMemberInfoChange = useRecoilCallback(({ set }) => (peerId: string, meshRoomMember: ExMember) => {
-    set(meshRoomMemberStateByPeerId(peerId), meshRoomMember);
+    startTransition(() => {
+      set(meshRoomMemberStateByPeerId(peerId), meshRoomMember);
+    })
   })
 
   // ルームが閉じられたとき
@@ -84,8 +89,6 @@ export const MeshRoomInitializer = ({peer, roomId, myName, startPosition }:MeshR
       exMeshRoom.close()
     }
   })
-
-  console.log('render')
 
   return (
     <Fragment />

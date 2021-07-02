@@ -184,7 +184,6 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     newP[peerId] = old
     const newMembers = Object.assign({}, meshRoomMembers, newP)
     meshRoomMembers = newMembers
-    __myPosition = position
     option.onMeshRoomMemberInfoChange && option.onMeshRoomMemberInfoChange(peerId, old)
   }
 
@@ -196,6 +195,7 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
       to: 'all',
       name: getMyName()
     }
+    console.log('ping')
     room.send(data)
   }
 
@@ -210,14 +210,31 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     room.send(ping_res_data)
   }
 
+  let lastMoveToSend = undefined
+  let timerId = undefined
   const moveTo = (position: ExMemberPosition) => {
+    __myPosition = position
+    
+    // send は 100ms 以上間を開けないと遅延する
     const moveTo_data:LibSendData = {
       dataType: 'move_to',
       to: 'all',
       position
     }
-    __myPosition = position
-    room.send(moveTo_data)
+    if(timerId) {
+      clearTimeout(timerId)
+      timerId = undefined
+    }
+    if(!lastMoveToSend || new Date().getTime() - lastMoveToSend > 100){
+      room.send(moveTo_data)
+      lastMoveToSend = new Date().getTime()
+    } else {
+      // skip
+      timerId = setTimeout(() => {
+        room.send(moveTo_data)
+        lastMoveToSend = new Date().getTime()
+      }, 101)
+    }
   }
 
   const sendMyName = (myName: string) => {
