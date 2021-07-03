@@ -13,9 +13,6 @@ export const MyComponent = ({name, size}: MyComponentProps) => {
   const [clickOffset, setClickOffset] = useState<{x: number, y: number}>({x: 0, y: 0})
   const [isDragging, setIsDragging] = useState(false)
   const [myPosition, setMyPositon] = useRecoilState(meshRoomMyPositionState)
-  const [isPending, startTransition] = useTransition({
-    timeoutMs: 3000
-  });
 
   // DragStart
   const dragStartHandler = useCallback((event: MouseEvent<SVGCircleElement>) => {
@@ -54,18 +51,6 @@ export const MyComponent = ({name, size}: MyComponentProps) => {
   const dragEndHandler = useCallback((event: React.MouseEvent<SVGCircleElement>) => {
     if(isDragging) {
       setIsDragging(false)
-
-      /*
-      setTimeout(() => {
-        const gMousePos = {x: event.clientX - SvgOffset.x, y: event.clientY - SvgOffset.y}
-        setMyPositon({
-          x: gMousePos.x - clickOffset.x,
-          y: gMousePos.y - clickOffset.y,
-          z: 0
-        })
-      },101)
-      */
-
       const gMousePos = {x: event.clientX - SvgOffset.x, y: event.clientY - SvgOffset.y}
       setMyPositon({
         x: gMousePos.x - clickOffset.x,

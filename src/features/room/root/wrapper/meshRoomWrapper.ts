@@ -111,6 +111,16 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     removeMember(peerId)
   })
 
+  // ルームに Join している他のユーザのストリームを受信した時に発生します。 ストリーム送信元の Peer ID はstream.peerIdで取得できます。
+  room.on('stream', stream => {
+    console.log(`on stream ${stream.id}`)
+  
+    var audio = document.createElement("audio");
+    audio.srcObject = stream
+    audio.play()
+
+  })
+
   // =============================================================================
   const onData = (src, data) => {
     if(data.dataType && data.to){
@@ -195,7 +205,6 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
       to: 'all',
       name: getMyName()
     }
-    console.log('ping')
     room.send(data)
   }
 

@@ -6,17 +6,19 @@ import { MeshRoomInitializer } from './initializer/MeshRoomInitializer';
 
 type MeshRoomRootProps = {
   peer: Peer
+  stream: MediaStream
   roomId: string
   children: ReactNode
 }
 
-export const MeshRoomRoot = ({peer, roomId, children}: MeshRoomRootProps) => {
+export const MeshRoomRoot = ({peer, stream, roomId, children}: MeshRoomRootProps) => {
   const peerUserNameLabel = useRecoilValue(peerUserNameLabelState)
   
   return (
     <RecoilRoot>
       <MeshRoomInitializer
         peer={peer}
+        stream={stream}
         roomId={roomId}
         myName={peerUserNameLabel}
         startPosition={{

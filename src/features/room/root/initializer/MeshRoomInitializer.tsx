@@ -9,24 +9,27 @@ let __room: MeshRoom | undefined = undefined;
 
 type MeshRoomContainerProps = {
   peer: Peer | undefined
+  stream: MediaStream | undefined
   roomId: string
   myName: string
   startPosition: ExMemberPosition
 }
 
-export const MeshRoomInitializer = ({peer, roomId, myName, startPosition }:MeshRoomContainerProps) => {
+export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition }:MeshRoomContainerProps) => {
   const [exMeshRoom, setExMeshRoom] = useState<ExMeshRoom>()
   const setMeshRoomMemberPeerIds = useSetRecoilState(meshRoomMemberIdsState)
   const setMeshRoomId = useSetRecoilState(meshRoomIdState)
   const myPosition = useRecoilValue(meshRoomMyPositionState)
   const [isPending, startTransition] = useTransition({
-    timeoutMs: 3000
+    timeoutMs: 1000
   });
 
+  // peer
   useEffect(() => {
-    if(peer){
+    if(peer && stream){
       console.log(`■ MeshRoomInitializer ■`)
       exMeshRoomOpener(peer, roomId, {
+        stream,
         myName,
         startPosition,
         onRoomClose,
@@ -39,7 +42,7 @@ export const MeshRoomInitializer = ({peer, roomId, myName, startPosition }:MeshR
         setMeshRoomId(roomId)
       })
     }
-  },[peer])
+  },[peer, stream])
 
   useEffect(() => {
     if(exMeshRoom) {
@@ -61,19 +64,22 @@ export const MeshRoomInitializer = ({peer, roomId, myName, startPosition }:MeshR
   // Room のメンバーに変更があった時
   const onRoomMemberChange = useRecoilCallback(({ set }) => (meshRoomMembers: ExMembers) => {
     const newPeerIds = Object.keys(meshRoomMembers)
-
-    setMeshRoomMemberPeerIds(newPeerIds)
-    
-    // MeshRoomMember を peerId で確認する
-    // const member = useRecoilValue(meshRoomMemberStateByPeerId(peerId));
-    newPeerIds.forEach((newPeerId) => {
-      set(meshRoomMemberStateByPeerId(newPeerId), meshRoomMembers[newPeerId]);
+    startTransition(() => {
+      // 遅延
+      setMeshRoomMemberPeerIds(newPeerIds)
+      
+      // MeshRoomMember を peerId で確認する
+      // const member = useRecoilValue(meshRoomMemberStateByPeerId(peerId));
+      newPeerIds.forEach((newPeerId) => {
+        set(meshRoomMemberStateByPeerId(newPeerId), meshRoomMembers[newPeerId]);
+      })
     })
   });
 
   // Room のメンバーの情報に変更があった時
   const onPeerMemberInfoChange = useRecoilCallback(({ set }) => (peerId: string, meshRoomMember: ExMember) => {
     startTransition(() => {
+      // 遅延
       set(meshRoomMemberStateByPeerId(peerId), meshRoomMember);
     })
   })
