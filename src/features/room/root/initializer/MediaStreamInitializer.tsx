@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import { useMount } from 'react-use';
 
 type MediaStreamInitializerProps = {
@@ -13,11 +13,6 @@ export const MediaStreamInitializer = ({
     var constraints = { audio: true, video: false };
     navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
       onMediaStream(stream)
-      /**
-      const ctx = new AudioContext();
-      const source = ctx.createMediaStreamSource(stream);
-      source.connect(ctx.destination);
-       */
     })
   })
 

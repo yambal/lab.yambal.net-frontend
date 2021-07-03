@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, Fragment, useTransition } from
 import { useUnmount } from 'react-use';
 import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
 import Peer, { MeshRoom } from 'skyway-js'
-import { distanceFamilyById, ExDistance, meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId, meshRoomMyPositionState } from '../../peerAtom'
-import { ExMeshRoom, ExMember, ExMembers, exMeshRoomOpener, ExMemberPosition } from '../wrapper/meshRoomWrapper';
+import { distanceFamilyById, ExDistance, meshRoomIdState, meshRoomMemberIdsState, meshRoomMemberStateByPeerId, meshRoomMyPositionState, positionFamilyById } from '../../peerAtom'
+import { exMeshRoomOpener } from '../wrapper/exMeshRoomOpener'
+import { ExMeshRoom, ExMember, ExMembers, ExMemberPosition } from '../wrapper/exMeshRoomTypes'
 
 let __room: ExMeshRoom | undefined = undefined;
 
@@ -20,7 +21,8 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
   const setMeshRoomMemberPeerIds = useSetRecoilState(meshRoomMemberIdsState)
   const setMeshRoomId = useSetRecoilState(meshRoomIdState)
   const myPosition = useRecoilValue(meshRoomMyPositionState)
-  const peerIds = useRecoilValue(meshRoomMemberIdsState)
+
+
   const [isPending, startTransition] = useTransition({
     timeoutMs: 1000
   });
@@ -36,8 +38,10 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
         onRoomClose,
         onRoomMemberChange,
         onPeerMemberInfoChange,
+        onPositionChange,
         onDistanceChange,
-        onMeshRoomData
+        onMeshRoomData,
+        onPeerLeave
       }).then((exMeshRoom) => {
         __room = exMeshRoom
         setExMeshRoom(__room)
@@ -64,6 +68,10 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
 
   },[])
 
+  const onPeerLeave = useCallback((peerId: string) => {
+
+  },[])
+
   // Room のメンバーに変更があった時
   const onRoomMemberChange = useRecoilCallback(({ set }) => (meshRoomMembers: ExMembers) => {
     const newPeerIds = Object.keys(meshRoomMembers)
@@ -71,8 +79,6 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
       // 遅延
       setMeshRoomMemberPeerIds(newPeerIds)
 
-      console.log(`onRoomMemberChange myPos : ${JSON.stringify(__room?.ex.getMyPosision())}`)
-      
       // MeshRoomMember を peerId で確認する
       // const member = useRecoilValue(meshRoomMemberStateByPeerId(peerId));
       newPeerIds.forEach((newPeerId) => {
@@ -87,6 +93,11 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
       // 遅延
       set(meshRoomMemberStateByPeerId(peerId), meshRoomMember)
     })
+  })
+
+  // 座標に変化があった時
+  const onPositionChange = useRecoilCallback(({ set }) => (peerId: string, position: ExMemberPosition) => {
+    set(positionFamilyById(peerId), position)
   })
 
   // 距離に変化があった時
