@@ -18,7 +18,7 @@ export const meshRoomMemberIdsState = atom<string[]>({
   default: []
 });
 
-//
+// Member 
 export const meshRoomMemberStateByPeerId = atomFamily<ExMember, string>({
   key: "roomMemberFamiky",
   default: undefined
@@ -31,4 +31,11 @@ export const meshRoomMyPositionState = atom<ExMemberPosition>({
     y: 0,
     z: 0
   }
+})
+
+// Distance
+export type ExDistance = 'out' | 'in'
+export const distanceFamilyById = atomFamily<ExDistance, string>({
+  key: "distanceFamily",
+  default: undefined
 });

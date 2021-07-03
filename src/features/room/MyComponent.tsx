@@ -69,7 +69,7 @@ export const MyComponent = ({name, size}: MyComponentProps) => {
         onMouseMove={draggingHandler}
         onMouseUp={dragEndHandler}
         onMouseOut={dragEndHandler}
-        r={20}
+        r={size}
         fill="red"
       />
     </g> : null

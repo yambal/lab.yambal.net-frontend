@@ -1,4 +1,5 @@
 import Peer, { MeshRoom } from "skyway-js"
+import { ExDistance } from "../../peerAtom"
 
 /**
  * meshRoomWrapper
@@ -16,6 +17,7 @@ import Peer, { MeshRoom } from "skyway-js"
   onRoomClose?: () => void
   onRoomMemberChange? : (meshRoomMembses: ExMembers) => void
   onPeerMemberInfoChange? : (peerId: string, meshRoomMember: ExMember) => void
+  onDistanceChange: (peerId: string, distance:number) => void,
   onMeshRoomData?: (src: string, data: {}) => void
 }
 
@@ -31,6 +33,7 @@ export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: MeshRoomWr
         startPosition: option?.startPosition,
         onMeshRoomMemberChange: option.onRoomMemberChange,
         onMeshRoomMemberInfoChange: option.onPeerMemberInfoChange,
+        onDistanceChange: option.onDistanceChange,
         onMeshRoomData: option.onMeshRoomData
       })
 
@@ -75,6 +78,7 @@ type ExMethods = {
   setMyName: (name: string) => void
   changeMemberName: (peerId: string, name: string) => void
   getMyName: () => string,
+  getMyPosision: () => ExMemberPosition
   moveTo: (position: ExMemberPosition) => void,
   sendPing: () => void
 }
@@ -84,6 +88,7 @@ type RoomExtention = (room: MeshRoom, peerId: string, option?: {
   startPosition?: ExMemberPosition
   onMeshRoomMemberChange?: (meshRoomMembers: ExMembers)=> void
   onMeshRoomMemberInfoChange?: (peerId: string, meshRoomMember: ExMember)=> void
+  onDistanceChange: (peerId: string, distance:number) => void,
   onMeshRoomData?: (src: string, data: {}) => void
 }) => ExMethods
 
@@ -113,13 +118,15 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
 
   // ルームに Join している他のユーザのストリームを受信した時に発生します。 ストリーム送信元の Peer ID はstream.peerIdで取得できます。
   room.on('stream', stream => {
+    onStream(stream)
+  })
+
+  const onStream = (stream: MediaStream) => {
     console.log(`on stream ${stream.id}`)
-  
     var audio = document.createElement("audio");
     audio.srcObject = stream
     audio.play()
-
-  })
+  }
 
   // =============================================================================
   const onData = (src, data) => {
@@ -138,10 +145,14 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
             break;
           case `res_ping`:
             // Ping応答を受信
+            const distance = getDistance(recieveLibSendData.position, getMyPosision())
+            option.onDistanceChange &&  option.onDistanceChange(src, distance)
+
             const resM:ExMember = {
               name: recieveLibSendData.name,
               position: recieveLibSendData.position
             }
+            
             addMember(src, resM)
             break;
           case `change_name`:
@@ -150,6 +161,9 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
             break;
           case 'move_to':
             // 移動を受信
+            const distance2 = getDistance(recieveLibSendData.position, getMyPosision())
+            option.onDistanceChange &&  option.onDistanceChange(src, distance2)
+
             changeMemberPosition(src, data.position)
             break;
         }
@@ -157,6 +171,13 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     } else {
       option.onMeshRoomData && option.onMeshRoomData(src, data)
     }
+  }
+
+  const getDistance = (posA?: ExMemberPosition, posB?: ExMemberPosition): number | undefined => {
+    if(posA && posB) {
+      return Math.sqrt((posA.x - posB.x) * (posA.x - posB.x) + (posA.y - posB.y) * (posA.y - posB.y))
+    }
+    return undefined
   }
 
   // メンバーを追加する
@@ -235,15 +256,26 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
       timerId = undefined
     }
     if(!lastMoveToSend || new Date().getTime() - lastMoveToSend > 100){
+      allMemberDistance()
+
       room.send(moveTo_data)
       lastMoveToSend = new Date().getTime()
     } else {
       // skip
       timerId = setTimeout(() => {
+        allMemberDistance()
+
         room.send(moveTo_data)
         lastMoveToSend = new Date().getTime()
       }, 101)
     }
+  }
+
+  const allMemberDistance = () => {
+    Object.keys(meshRoomMembers).forEach((peerId) => {
+      const distance = getDistance(meshRoomMembers[peerId].position, getMyPosision())
+      option.onDistanceChange &&  option.onDistanceChange(peerId, distance)
+    })
   }
 
   const sendMyName = (myName: string) => {
@@ -277,6 +309,7 @@ const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     setMyName,
     changeMemberName,
     getMyName,
+    getMyPosision,
     moveTo,
     sendPing
   }
