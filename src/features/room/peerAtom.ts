@@ -18,10 +18,12 @@ export const meshRoomMemberIdsState = atom<string[]>({
 });
 
 // Member 
+/*
 export const meshRoomMemberStateByPeerId = atomFamily<ExMember, string>({
   key: "roomMemberFamiky",
   default: undefined
 });
+*/
 
 export const meshRoomMyPositionState = atom<ExMemberPosition>({
   key: 'meshRoomMyPosition',
@@ -31,6 +33,12 @@ export const meshRoomMyPositionState = atom<ExMemberPosition>({
     z: 0
   }
 })
+
+// Members Name
+export const nameFamilyById = atomFamily<string, string>({
+  key: "nameFamily",
+  default: undefined
+});
 
 // Members Position
 export const positionFamilyById = atomFamily<ExMemberPosition, string>({

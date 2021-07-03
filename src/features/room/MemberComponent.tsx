@@ -1,15 +1,14 @@
 import React, { MouseEventHandler, useCallback, MouseEvent, } from 'react';
 
 import { useRecoilValue } from "recoil"
-import { distanceFamilyById, meshRoomMemberStateByPeerId, positionFamilyById } from "./peerAtom"
+import { distanceFamilyById, nameFamilyById, positionFamilyById } from "./peerAtom"
 
 type MemberComponentProps = {
   peerId: string
 }
 
-
 export const MemberComponent = ({peerId}: MemberComponentProps) => {
-  const member = useRecoilValue(meshRoomMemberStateByPeerId(peerId))
+  const name = useRecoilValue(nameFamilyById(peerId))
   const position = useRecoilValue(positionFamilyById(peerId))
   const distance = useRecoilValue(distanceFamilyById(peerId))
 
@@ -23,7 +22,7 @@ export const MemberComponent = ({peerId}: MemberComponentProps) => {
         r={20}
         fill="red"
       />
-      <text style={{userSelect: 'none'}}>{member.name}</text>
+      <text style={{userSelect: 'none'}}>{name}</text>
       <text 
         x={0}
         y={12}
