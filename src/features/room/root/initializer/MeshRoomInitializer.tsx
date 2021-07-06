@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useCallback, Fragment, useTransition } from 'react';
+import React, { useState, useEffect, useCallback, Fragment, useTransition, useRef } from 'react';
 import { useUnmount } from 'react-use';
 import { useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import Peer from 'skyway-js'
-import { distanceFamilyById, meshRoomIdState, meshRoomMemberIdsState, meshRoomMyPositionState, nameFamilyById, positionFamilyById } from '../../peerAtom'
+import { MemberAudio } from '../../MemberAudio';
+import {
+  distanceFamilyById,
+  exMeshodsState,
+  meshRoomIdState,
+  meshRoomMemberIdsState,
+  meshRoomMyPositionState,
+  nameFamilyById,
+  positionFamilyById,
+} from '../../peerAtom'
 import { exMeshRoomOpener } from '../wrapper/exMeshRoomOpener'
 import { ExMeshRoom, ExMemberPosition } from '../wrapper/exMeshRoomTypes'
 
@@ -19,8 +28,10 @@ type MeshRoomContainerProps = {
 export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition }:MeshRoomContainerProps) => {
   const [exMeshRoom, setExMeshRoom] = useState<ExMeshRoom>()
   const [peerIds, setMeshRoomMemberPeerIds] = useRecoilState(meshRoomMemberIdsState)
+  const [exMethods, setExMethods] = useRecoilState(exMeshodsState)
   const setMeshRoomId = useSetRecoilState(meshRoomIdState)
   const myPosition = useRecoilValue(meshRoomMyPositionState)
+
   
   const [isPending, startTransition] = useTransition({
     timeoutMs: 1000
@@ -35,11 +46,12 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
         myName,
         startPosition,
         onRoomClose,
-        onMemberChange,
+        onIdsChange,
         onNameChange,
         onPositionChange,
         onDistanceChange,
         onData,
+        onStream,
         onPeerLeave
       }).then((exMeshRoom) => {
         __room = exMeshRoom
@@ -49,39 +61,63 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
     }
   },[peer, stream])
 
+  /**
+   * Roomが初期化されたら拡張メソッドをStateに登録する
+   */
   useEffect(() => {
     if(exMeshRoom) {
-      // ユーザー名をセットする
-      exMeshRoom.ex.setMyName(myName)
+      setExMethods(exMeshRoom.ex)
     }
-  },[myName, exMeshRoom])
+  },[exMeshRoom])
+
+  useEffect(() => {
+    if(exMethods) {
+      // ユーザー名をセットする
+      exMethods.setMyName(myName)
+    }
+  },[myName, exMethods])
 
   useEffect(() => {
     // 自分が移動したとき
-    if(exMeshRoom) {
-      exMeshRoom.ex.moveTo(myPosition)
+    if(exMethods) {
+      exMethods.moveTo(myPosition)
     }
-  },[myPosition, exMeshRoom])
+  },[myPosition, exMethods])
 
   // データを受信したとき
   const onData = useCallback((src: String, data: {}) => {
 
   },[])
 
+  const onStream = useCallback((stream: MediaStream) => {
+
+  },[])
+
+   // ルームが閉じられたとき
+   const onRoomClose = useCallback(() => {
+  },[exMeshRoom])
+
+
   // 
-  const onPeerLeave = useRecoilCallback(({ reset }) => (leavePeerId: string, leavedPeerIds: string[]) => {
+  const onPeerLeave = useRecoilCallback(({ reset, snapshot }) => async(leavePeerId: string) => {
     reset(nameFamilyById(leavePeerId))
     reset(positionFamilyById(leavePeerId))
     reset(distanceFamilyById(leavePeerId))
+
+    const beforIds = await snapshot.getPromise(meshRoomMemberIdsState)
+    const newIds = beforIds.filter((id) => {
+      return id !== leavePeerId
+    })
+    setMeshRoomMemberPeerIds(newIds)
   })
 
   // Room のメンバーに変更があった時
-  const onMemberChange = useCallback((peerIds: string[]) => {
+  const onIdsChange = useCallback((peerIds: string[]) => {
     startTransition(() => {
       // 遅延
       setMeshRoomMemberPeerIds(peerIds)
     })
-  },[peerIds]);
+  },[peerIds, __room]);
 
   const onNameChange = useRecoilCallback(({ set }) => (peerId: string, name: string) => {
     set(nameFamilyById(peerId), name)
@@ -101,10 +137,6 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
     const newDistance = distance > 150 ? 'out' : 'in'
     beforDistance !== newDistance && set(distanceFamilyById(peerId), newDistance)
   })
-
-  // ルームが閉じられたとき
-  const onRoomClose = useCallback(() => {
-  },[exMeshRoom])
 
   // unMount
   useUnmount(() => {

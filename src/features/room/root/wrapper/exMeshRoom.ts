@@ -1,4 +1,4 @@
-import { RoomExtention, LibSendData, ExMemberPosition } from "./exMeshRoomTypes"
+import { RoomExtention, LibSendData, ExMemberPosition, SkywayStream } from "./exMeshRoomTypes"
 
 /**
  * roomExtention
@@ -15,6 +15,9 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   let __memberNames: {
     [peerId: string]: string
   } = {}
+  let __memberStreams: {
+    [peerId: string]: MediaStream
+  } = {}
 
   let __myName: string = option?.myName || ''
   let __myPosition: ExMemberPosition = option.startPosition
@@ -30,30 +33,19 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   })
 
   // ルームに Join している他のユーザのストリームを受信した時に発生します。 ストリーム送信元の Peer ID はstream.peerIdで取得できます。
-  room.on('stream', stream => {
+  room.on('stream', (stream:SkywayStream) => {
     onStream(stream)
   })
 
   // メンバーを削除する
   const onPeerLeave = (peerId: string) => {
-    deleteMemberPosition(peerId)
-
-    // メンバーの基本情報
-    const removedIds = __meshRoomMembeIds.filter((id) => {
-      return id != peerId
-    })
-    __meshRoomMembeIds = removedIds
-    option.onMemberChange && option.onMemberChange(removedIds)
-
-    // Callback
-    option.onPeerLeave && option.onPeerLeave(peerId, removedIds)
+    removeMember(peerId)
+    option.onPeerLeave && option.onPeerLeave(peerId)
   }
 
-  const onStream = (stream: MediaStream) => {
-    console.log(`on stream ${stream.id}`)
-    var audio = document.createElement("audio");
-    audio.srcObject = stream
-    audio.play()
+  const onStream = (stream: SkywayStream) => {
+    addStream(stream)
+    option.onStream && option.onStream(stream)
   }
 
   // =============================================================================
@@ -73,15 +65,12 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
             break;
           case `change_name`:
             // 名前変更を受信
-            changeMemberName(src, data.name)
+            setName(src, data.name)
             break;
           case 'move_to':
             // 移動を受信
-            // 位置をセット
-            setMemberPosition(src, recieveLibSendData.position)
-
-            // 距離をセット
-            dispatchDistanceChange(src, recieveLibSendData.position)
+            setPosition(src, recieveLibSendData.position)
+            setDistance(src, recieveLibSendData.position)
             break;
         }
       }
@@ -96,7 +85,24 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     }
     return undefined
   }
-  const setMemberName = (peerId: string, name: string) => {
+
+  // メンバー
+  const addMember = (peerId: string, name: string, position: ExMemberPosition) => {
+    setName(peerId, name)
+    setPosition(peerId, position)
+    setDistance(peerId, position)
+    setId(peerId)
+  }
+
+  const removeMember = (peerId:string) => {
+    removePosition(peerId)
+    removeName(peerId)
+    removeId(peerId)
+    removeStream(peerId)
+  }
+
+  // Name
+  const setName = (peerId: string, name: string) => {
     const add = {}
     add[peerId] = name
     const newMemberNames = Object.assign({}, __memberNames, add)
@@ -104,8 +110,15 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     option.onNameChange && option.onNameChange(peerId, name)
   }
 
-  // メンバーの座標更新と通知
-  const setMemberPosition = (peerId: string, position: ExMemberPosition) => {
+  const removeName = (peerId: string) => {
+    const newMemberNames = Object.assign({}, __memberNames)
+    delete newMemberNames[peerId]
+    __memberNames = newMemberNames
+    /** Family 側は onPeerLeave で削除 */
+  }
+
+  // 座標
+  const setPosition = (peerId: string, position: ExMemberPosition) => {
     const add = {}
     add[peerId] = position
     const newMemberPositions = Object.assign({}, __memberPositions, add)
@@ -113,46 +126,48 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     option.onPositionChange && option.onPositionChange(peerId, position)
   }
 
-  const deleteMemberPosition = (peerId: string) => {
+  const removePosition = (peerId: string) => {
     const newMemberPositions = Object.assign({}, __memberPositions)
     delete newMemberPositions[peerId]
     __memberPositions = newMemberPositions
-    /** TODO: Family 側も削除 */
+    /** Family 側は onPeerLeave で削除 */
   }
 
   // メンバーとの距離
-  const dispatchDistanceChange = (peerId: string, position: ExMemberPosition) => {
+  const setDistance = (peerId: string, position: ExMemberPosition) => {
     const distance = getDistance(position, getMyPosision())
     option.onDistanceChange && option.onDistanceChange(peerId, distance)
-    /** TODO: Family 側も削除 */
+    /** Family 側は onPeerLeave で削除 */
   }
 
-  // メンバーを追加する
-  const addMember = (peerId: string, name: string, position: ExMemberPosition) => {
-    // name
-    setMemberName(peerId, name)
-
-    // position
-    setMemberPosition(peerId, position)
-
-    // distance
-    dispatchDistanceChange(peerId, position)
-
-    // メンバーの基本情報
+  // PeerIds
+  const setId = (peerId: string) => {
     const newMembers = __meshRoomMembeIds.concat(peerId)
     __meshRoomMembeIds = newMembers
-    option.onMemberChange && option.onMemberChange(__meshRoomMembeIds)
+    option.onIdsChange && option.onIdsChange(__meshRoomMembeIds)
   }
 
-  // メンバーの名前を変更する
-  const changeMemberName = (peerId: string, name: string) => {
-    const newP = {}
-    newP[peerId] = name
-    const old = Object.assign({}, __memberNames, newP)
-    __memberNames = old
-
-    option.onNameChange && option.onNameChange(peerId, name)
+  const removeId = (peerId: string) => {
+    const removedIds = __meshRoomMembeIds.filter((id) => {
+      return id != peerId
+    })
+    __meshRoomMembeIds = removedIds
+    /** Family 側は onPeerLeave で削除 */
   }
+
+  const addStream = (stream: SkywayStream) => {
+    const newMemberStream ={}
+    newMemberStream[stream.peerId] = stream
+    __memberStreams = Object.assign({},__memberStreams, newMemberStream)
+  }
+
+  const removeStream = ((peerId: string) => {
+    const newMemberStreams = Object.assign({}, __memberStreams)
+    delete newMemberStreams[peerId]
+    __memberStreams = newMemberStreams
+  })
+
+
 
   // 通信
   // Ping 送信
@@ -238,14 +253,19 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     return __myPosition
   }
 
+  const getStream = (peerId: string) => {
+    return __memberStreams[peerId]
+  }
+
   sendPing()
 
   return {
     setMyName,
-    changeMemberName,
+    setName,
     getMyName,
     getMyPosision,
     moveTo,
-    sendPing
+    sendPing,
+    getStream
   }
 }

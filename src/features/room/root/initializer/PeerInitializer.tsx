@@ -3,9 +3,9 @@ import { useMount, useUnmount } from 'react-use';
 import Peer from 'skyway-js'
 import { SystemProps, x } from '@xstyled/styled-components'
 import { peerWrapper } from '../wrapper/peerWrapper';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 
-import { peerUserNameLabelState } from '../../peerAtom';
+import { peerMyNameState } from '../../peerAtom';
 
 let __peer: Peer | undefined
 
@@ -18,7 +18,7 @@ type PeerInitializerProps = {
 export const PeerInitializer = ({aliKey, onPeer, peerUserNameLabel}:PeerInitializerProps) => {
 
   const [peer, setPeer] = useState<Peer>()
-  const [__peerUserNameLabel, setPeerUserNameLabel] = useRecoilState(peerUserNameLabelState)
+  const setPeerMyName = useSetRecoilState(peerMyNameState)
 
   useMount(() => {
     peerWrapper(aliKey, {
@@ -28,7 +28,7 @@ export const PeerInitializer = ({aliKey, onPeer, peerUserNameLabel}:PeerInitiali
       setPeer(__peer)
       onPeer(__peer)
     })
-    setPeerUserNameLabel(peerUserNameLabel)
+    setPeerMyName(peerUserNameLabel)
   })
 
   const onPeerClose = useCallback(() => {

@@ -20,24 +20,26 @@ export type ExMeshRoom = MeshRoom & {
   ex?: ExMethods
 }
 
-type ExMethods = {
+export type ExMethods = {
   setMyName: (name: string) => void
-  changeMemberName: (peerId: string, name: string) => void
   getMyName: () => string,
   getMyPosision: () => ExMemberPosition
   moveTo: (position: ExMemberPosition) => void,
+  setName: (peerId: string, name: string) => void
   sendPing: () => void
+  getStream: (peerId: string) => MediaStream
 }
 
 type ExOption = {
   myName?: string
   startPosition?: ExMemberPosition
-  onMemberChange: (meshRoomMemberIds: string[])=> void
+  onIdsChange: (meshRoomMemberIds: string[])=> void
   onNameChange: (peerId: string, name: string) => void,
-  onPositionChange: (peerId, position: ExMemberPosition) => void,
-  onDistanceChange: (peerId: string, distance:number) => void,
+  onPositionChange: (peerId, position: ExMemberPosition) => void
+  onDistanceChange: (peerId: string, distance:number) => void
   onData: (src: string, data: {}) => void
-  onPeerLeave: (leavePeerId: string, leavedPeerIds: string[]) => void
+  onStream: (stream: MediaStream) => void
+  onPeerLeave: (leavePeerId: string) => void
 }
 
 export type RoomExtention = (room: MeshRoom, peerId: string, option?: ExOption) => ExMethods
@@ -55,3 +57,7 @@ export type ExMeshRoomOpenerOption = {
   stream?: MediaStream
   onRoomClose?: () => void
 } & ExOption
+
+export type SkywayStream = MediaStream & {
+  peerId: string
+}

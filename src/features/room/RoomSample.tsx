@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { useRecoilValue } from "recoil"
 import { meshRoomIdState, meshRoomMemberIdsState } from "./peerAtom"
 import { MemberComponent } from './MemberComponent'
 import { MyComponent } from './MyComponent'
+import { MemberAudio } from './MemberAudio'
 
 export const RoomSample = () => {
   const meshRoomId = useRecoilValue(meshRoomIdState)
   const peerIds = useRecoilValue(meshRoomMemberIdsState)
 
   console.log(`11, ${meshRoomId}, ${peerIds}`)
+
 
   return (
     <>
@@ -25,6 +27,11 @@ export const RoomSample = () => {
         })}
         <MyComponent name={'me'} size={15}/>
       </svg>
+      {peerIds.map((peerId) => {
+        return (
+          <MemberAudio peerId={peerId} key={peerId}/>
+        )
+      })}
     </>
   )
 }

@@ -13,7 +13,7 @@ import { ExMeshRoom, ExMeshRoomOpenerOption } from "./exMeshRoomTypes"
 
 
 export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: ExMeshRoomOpenerOption): Promise<ExMeshRoom> => {
-  const { onMemberChange, onNameChange, onPositionChange, onDistanceChange, onData, onPeerLeave } = option
+  const { onIdsChange, onNameChange, onPositionChange, onDistanceChange, onData, onStream, onPeerLeave } = option
   
   return new Promise((resolve, reject) => {
     
@@ -26,11 +26,12 @@ export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: ExMeshRoom
       exMeshRoom['ex'] = roomExtention(room, peer.id, {
         myName: option?.myName,
         startPosition: option?.startPosition,
-        onMemberChange: onMemberChange,
+        onIdsChange,
         onNameChange,
         onPositionChange,
         onDistanceChange,
         onData,
+        onStream,
         onPeerLeave
       })
 
