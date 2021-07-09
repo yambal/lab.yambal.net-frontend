@@ -17,8 +17,8 @@ export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: ExMeshRoom
   
   return new Promise((resolve, reject) => {
     
-
     meshRoomOpener(peer, roomId, option?.stream).then((room) => {
+      console.log(`opened ${roomId}`)
       option?.onRoomClose && room.on('close', option?.onRoomClose)
 
       // 拡張 : meshRoom.exMethod として meshRoom を拡張する

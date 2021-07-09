@@ -1,6 +1,6 @@
 import { atom, atomFamily, selector, selectorFamily, useRecoilState } from 'recoil'
 import Peer, { MeshRoom } from 'skyway-js';
-import { ExMember, ExMembers, ExMemberPosition, ExMethods } from './root/wrapper/exMeshRoomTypes';
+import { ExDistance, ExMemberPosition, ExMethods } from './root/wrapper/exMeshRoomTypes';
 
 export const peerMyNameState = atom<string>({
   key: "peerMyName",
@@ -44,7 +44,7 @@ export const positionFamilyById = atomFamily<ExMemberPosition, string>({
 });
 
 // Distance
-export type ExDistance = 'out' | 'in'
+
 export const distanceFamilyById = atomFamily<ExDistance, string>({
   key: "distanceFamily",
   default: undefined

@@ -6,7 +6,7 @@ import { MeshRoomInitializer } from './initializer/MeshRoomInitializer';
 
 type MeshRoomRootProps = {
   peer: Peer
-  stream: MediaStream
+  stream?: MediaStream
   roomId: string
   children: ReactNode
 }
@@ -22,8 +22,8 @@ export const MeshRoomRoot = ({peer, stream, roomId, children}: MeshRoomRootProps
         roomId={roomId}
         myName={peerUserName}
         startPosition={{
-          x: 0,
-          y: 0,
+          x: 15,
+          y: 15,
           z: 0
         }}
       />

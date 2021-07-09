@@ -24,7 +24,7 @@ export type ExMethods = {
   setMyName: (name: string) => void
   getMyName: () => string,
   getMyPosision: () => ExMemberPosition
-  moveTo: (position: ExMemberPosition) => void,
+  iMoveTo: (position: ExMemberPosition) => void,
   setName: (peerId: string, name: string) => void
   sendPing: () => void
   getStream: (peerId: string) => MediaStream
@@ -61,3 +61,5 @@ export type ExMeshRoomOpenerOption = {
 export type SkywayStream = MediaStream & {
   peerId: string
 }
+
+export type ExDistance = 'immediately' | 'standingTalk' | 'symposium' | 'festa' | 'neighborhood' | 'out'

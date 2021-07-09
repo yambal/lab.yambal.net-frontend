@@ -3,7 +3,9 @@ import { SystemProps, x } from '@xstyled/styled-components'
 import Peer from 'skyway-js';
 import { MeshRoomRoot } from './root/MeshRoomRoot'
 import { PeerRoot } from './root/PeerRoot'
-import { RoomSample } from './RoomSample';
+import { SvgPlaceRooomComponent } from './svgPlaceRooom/SvgPlaceRooomComponent'
+import Measure from 'react-measure'
+import {UsersComponant} from './UsersComponant'
 
 let __peer: Peer | undefined
 let __stream: MediaStream | undefined
@@ -20,6 +22,7 @@ export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(fu
 ) {
   const [peer, setPeer] = useState<Peer | undefined>(undefined)
   const [stream, setStream] = useState<MediaStream | undefined>(undefined)
+  const [bouns, setBouns] = useState<{w: number, h:number} | undefined>({ w: 640, h: 640 })
 
   const onPeer = useCallback((_peer: Peer) => {
     __peer = _peer
@@ -31,27 +34,50 @@ export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(fu
     setStream(__stream)
   },[])
 
+  const onBounse = useCallback((contentRect: any) => {
+    setBouns({w: contentRect.bounds.width, h: contentRect.bounds.height})
+  },[])
+
   console.log(`xxx render PlaceContainer xxx`)
 
   return (
-    <x.div
-      ref={ref}
-      {...restProps}
+    <Measure
+      bounds
+      onResize={onBounse}
     >
-      <PeerRoot
-        aliKey="42f75ed0-a9ff-4f07-ad83-cecc2daa274c"
-        onPeer={onPeer}
-        onMediaStream={onMediaStream}
-        peerUserNameLabel={`user: ${new Date()}`}
-      >
-        <MeshRoomRoot
-          peer={peer}
-          roomId="3rd"
-          stream={stream}
+      {({ measureRef }) => (
+        <x.div
+          ref={measureRef}
+          w="100%"
+          h={'calc(100vh - 56px)'}
+          display="flex"
         >
-          <RoomSample />
-        </MeshRoomRoot>
-      </PeerRoot>
-    </x.div>
+          <PeerRoot
+            aliKey="42f75ed0-a9ff-4f07-ad83-cecc2daa274c"
+            onPeer={onPeer}
+            onMediaStream={onMediaStream}
+            peerUserNameLabel={`user: ${new Date()}`}
+          >
+            {stream && <MeshRoomRoot
+              peer={peer}
+              roomId="3rd"
+              stream={stream}
+            >
+              <SvgPlaceRooomComponent
+                width={bouns.w - 250}
+                height={bouns.h}
+              />
+            </MeshRoomRoot>}
+
+            <MeshRoomRoot
+              peer={peer}
+              roomId="users"
+            >
+              <UsersComponant />
+            </MeshRoomRoot>
+          </PeerRoot>
+        </x.div>
+      )}
+    </Measure>
   )
 })

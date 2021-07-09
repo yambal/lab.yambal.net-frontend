@@ -175,7 +175,8 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     const data:LibSendData = {
       dataType: "ping",
       to: 'all',
-      name: getMyName()
+      name: getMyName(),
+      position: __myPosition
     }
     room.send(data)
   }
@@ -193,9 +194,10 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
 
   let lastMoveToSend = undefined
   let timerId = undefined
-  const moveTo = (position: ExMemberPosition) => {
+
+  const iMoveTo = (position: ExMemberPosition) => {
     __myPosition = position
-    
+
     // send は 100ms 以上間を開けないと遅延する
     const moveTo_data:LibSendData = {
       dataType: 'move_to',
@@ -264,7 +266,7 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     setName,
     getMyName,
     getMyPosision,
-    moveTo,
+    iMoveTo,
     sendPing,
     getStream
   }

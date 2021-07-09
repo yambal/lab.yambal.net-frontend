@@ -1,14 +1,20 @@
-import React, { useCallback, MouseEvent, useState, useTransition } from 'react';
-
+import React, { useCallback, MouseEvent, useState, useTransition, useEffect } from 'react';
 import { useRecoilState } from "recoil"
-import { meshRoomMyPositionState } from "./peerAtom"
+import { meshRoomMyPositionState } from "../peerAtom"
+import { x } from '@xstyled/styled-components'
+import { ExMemberPosition } from '../root/wrapper/exMeshRoomTypes';
 
-type MyComponentProps = {
+type SvgPlaceRoomMeComponentProps = {
   name:string
   size: number
+  onMove: (position: ExMemberPosition) => void
 }
 
-export const MyComponent = ({name, size}: MyComponentProps) => {
+export const SvgPlaceRoomMeComponent = ({
+  name,
+  size,
+  onMove
+}: SvgPlaceRoomMeComponentProps) => {
   const [SvgOffset, setSvgOffset] = useState<{x: number, y: number}>({x: 0, y: 0})
   const [clickOffset, setClickOffset] = useState<{x: number, y: number}>({x: 0, y: 0})
   const [isDragging, setIsDragging] = useState(false)
@@ -16,6 +22,8 @@ export const MyComponent = ({name, size}: MyComponentProps) => {
 
   // DragStart
   const dragStartHandler = useCallback((event: MouseEvent<SVGCircleElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
     if(!isDragging) {
       // SVG の左肩座標を取得
       const domRect = event.currentTarget.getBoundingClientRect()
@@ -31,6 +39,8 @@ export const MyComponent = ({name, size}: MyComponentProps) => {
 
   // Dragging
   const draggingHandler = useCallback((event: MouseEvent<SVGCircleElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
     if(isDragging){
       const gMousePos = {x: event.clientX - SvgOffset.x, y: event.clientY - SvgOffset.y}
 
@@ -45,32 +55,44 @@ export const MyComponent = ({name, size}: MyComponentProps) => {
         z: 0
       })
     }
-  },[isDragging])
+  },[isDragging, myPosition])
 
   // DragEnd
   const dragEndHandler = useCallback((event: React.MouseEvent<SVGCircleElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
     if(isDragging) {
       setIsDragging(false)
       const gMousePos = {x: event.clientX - SvgOffset.x, y: event.clientY - SvgOffset.y}
-      setMyPositon({
+      const newPos:ExMemberPosition = {
         x: gMousePos.x - clickOffset.x,
         y: gMousePos.y - clickOffset.y,
         z: 0
-      })
+      }
+      console.log('dragEndHandler')
+      setMyPositon(newPos)
+      onMove(newPos)
     }
-  },[isDragging])
+  },[isDragging, myPosition])
+
+  const clickHandler = useCallback((event: React.MouseEvent<SVGCircleElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+  },[])
 
   return (
     myPosition ? <g
       transform={`translate(${myPosition.x} ${myPosition.y})`}
     >
-      <circle
+      <x.circle
         onMouseDown={dragStartHandler}
         onMouseMove={draggingHandler}
         onMouseUp={dragEndHandler}
         onMouseOut={dragEndHandler}
+        onClick={clickHandler}
         r={size}
         fill="red"
+        cursor={isDragging ? 'grabbing' : 'grab'}
       />
     </g> : null
   )

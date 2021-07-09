@@ -19,9 +19,7 @@ export const UseTransitionContainer = () => {
   const [
     isPending,
     startTransition,
-  ] = useTransition({
-    timeoutMs: 3000
-  });
+  ] = useTransition();
   return (
     <Container>
       <div>pending : {isPending ? 'yes' : 'no'}</div>
