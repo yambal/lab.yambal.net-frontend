@@ -5,7 +5,7 @@ import { SystemProps, x } from '@xstyled/styled-components'
 import { peerWrapper } from '../wrapper/peerWrapper';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 
-import { peerMyNameState } from '../../peerAtom';
+import { peerMyNameState, peerAvatarUrlState } from '../..//logined/peerAtom';
 
 let __peer: Peer | undefined
 
@@ -13,12 +13,19 @@ type PeerInitializerProps = {
   aliKey: string
   onPeer: (peer: Peer) => void
   peerUserNameLabel: string
+  avatarUrl: string
 }
 
-export const PeerInitializer = ({aliKey, onPeer, peerUserNameLabel}:PeerInitializerProps) => {
+export const PeerInitializer = ({
+  aliKey,
+  onPeer,
+  peerUserNameLabel,
+  avatarUrl
+}:PeerInitializerProps) => {
 
   const [peer, setPeer] = useState<Peer>()
   const setPeerMyName = useSetRecoilState(peerMyNameState)
+  const setAvatarUrl = useSetRecoilState(peerAvatarUrlState)
 
   useMount(() => {
     peerWrapper(aliKey, {
@@ -29,6 +36,7 @@ export const PeerInitializer = ({aliKey, onPeer, peerUserNameLabel}:PeerInitiali
       onPeer(__peer)
     })
     setPeerMyName(peerUserNameLabel)
+    setAvatarUrl(avatarUrl)
   })
 
   const onPeerClose = useCallback(() => {

@@ -1,6 +1,6 @@
 import React, { useCallback, MouseEvent, useState, useTransition, useEffect } from 'react';
-import { useRecoilState } from "recoil"
-import { meshRoomMyPositionState } from "../peerAtom"
+import { useRecoilState, useRecoilValue } from "recoil"
+import { meshRoomMyPositionState, peerAvatarUrlState } from "../logined/peerAtom"
 import { x } from '@xstyled/styled-components'
 import { ExMemberPosition } from '../root/wrapper/exMeshRoomTypes';
 
@@ -19,6 +19,7 @@ export const SvgPlaceRoomMeComponent = ({
   const [clickOffset, setClickOffset] = useState<{x: number, y: number}>({x: 0, y: 0})
   const [isDragging, setIsDragging] = useState(false)
   const [myPosition, setMyPositon] = useRecoilState(meshRoomMyPositionState)
+  const peerAvatarUrl = useRecoilValue(peerAvatarUrlState)
 
   // DragStart
   const dragStartHandler = useCallback((event: MouseEvent<SVGCircleElement>) => {
@@ -84,6 +85,21 @@ export const SvgPlaceRoomMeComponent = ({
     myPosition ? <g
       transform={`translate(${myPosition.x} ${myPosition.y})`}
     >
+      <clipPath id={`clip-me`}>
+        <x.circle
+          r={size}
+          fill="red"
+        />
+      </clipPath>
+      <image
+        href={`${peerAvatarUrl}`}
+        clipPath="url(#clip-me)"
+        height={size * 2}
+        width={size * 2}
+        x={-size}
+        y={-size}
+        preserveAspectRatio="xMidYMid slice"
+      />
       <x.circle
         onMouseDown={dragStartHandler}
         onMouseMove={draggingHandler}
@@ -91,7 +107,7 @@ export const SvgPlaceRoomMeComponent = ({
         onMouseOut={dragEndHandler}
         onClick={clickHandler}
         r={size}
-        fill="red"
+        fill="rgba(0,0,0,0.01)"
         cursor={isDragging ? 'grabbing' : 'grab'}
       />
     </g> : null

@@ -1,10 +1,10 @@
 import React, { MouseEvent, useCallback, useMemo, useState } from 'react'
 
 import { useRecoilValue, useSetRecoilState } from "recoil"
-import { meshRoomMemberIdsState, meshRoomMyPositionState } from "../peerAtom"
+import { meshRoomMemberIdsState, meshRoomMyPositionState } from "../logined/peerAtom"
 import { SvgPlaceRoomMemberComponent } from './SvgPlaceRoomMemberComponent'
 import { SvgPlaceRoomMeComponent } from './SvgPlaceRoomMeComponent'
-import { MemberAudio } from '../MemberAudio'
+import { MemberAudio } from '../logined/MemberAudio'
 import { ExMemberPosition } from '../root/wrapper/exMeshRoomTypes'
 import { motion } from "framer-motion"
 
@@ -60,7 +60,11 @@ export const SvgPlaceRooomComponent = ({width, height}: SvgPlaceRooomComponentPr
         {peerIds.map((peerId) => {
           return <SvgPlaceRoomMemberComponent peerId={peerId} key={peerId} size={15} color="Gray"/>
         })}
-        <SvgPlaceRoomMeComponent name={'me'} size={20} onMove={onMove}/>
+        <SvgPlaceRoomMeComponent
+          name={'me'}
+          size={20}
+          onMove={onMove}
+        />
       </motion.svg>
       {peerIds.map((peerId) => {
         return (

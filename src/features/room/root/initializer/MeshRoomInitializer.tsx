@@ -9,8 +9,10 @@ import {
   meshRoomMemberIdsState,
   meshRoomMyPositionState,
   nameFamilyById,
+  avatarUrlFamilyById,
   positionFamilyById,
-} from '../../peerAtom'
+  peerAvatarUrlState
+} from '../../logined/peerAtom'
 import { exMeshRoomOpener } from '../wrapper/exMeshRoomOpener'
 import { ExMeshRoom, ExMemberPosition, ExDistance } from '../wrapper/exMeshRoomTypes'
 
@@ -21,15 +23,24 @@ type MeshRoomContainerProps = {
   stream?: MediaStream | undefined
   roomId: string
   myName: string
+  avatarUrl: string
   startPosition: ExMemberPosition
 }
 
-export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition }:MeshRoomContainerProps) => {
+export const MeshRoomInitializer = ({
+  peer,
+  stream,
+  roomId,
+  myName,
+  avatarUrl,
+  startPosition
+}:MeshRoomContainerProps) => {
   const [exMeshRoom, setExMeshRoom] = useState<ExMeshRoom>()
   const [peerIds, setMeshRoomMemberPeerIds] = useRecoilState(meshRoomMemberIdsState)
   const [exMethods, setExMethods] = useRecoilState(exMeshodsState)
   const setMeshRoomId = useSetRecoilState(meshRoomIdState)
   const [myPosition, setMyPosition] = useRecoilState(meshRoomMyPositionState)
+  const setPeerAvatarUrl= useSetRecoilState(peerAvatarUrlState)
 
   const [isPending, startTransition] = useTransition();
 
@@ -40,10 +51,12 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
       exMeshRoomOpener(peer, roomId, {
         stream,
         myName,
+        avatarUrl,
         startPosition,
         onRoomClose,
         onIdsChange,
         onNameChange,
+        onAvatarUrlChange,
         onPositionChange,
         onDistanceChange,
         onData,
@@ -53,13 +66,15 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
         __room = exMeshRoom
         setExMeshRoom(__room)
         setMeshRoomId(roomId)
+        setPeerAvatarUrl(avatarUrl)
       })
     }
   },[peer])
 
-  useMount(() => {
+  //useMount(() => {
+  useEffect(() => {
     setMyPosition(startPosition)
-  })
+  },[])
 
   /**
    * Roomが初期化されたら拡張メソッドをStateに登録する
@@ -120,6 +135,10 @@ export const MeshRoomInitializer = ({peer, stream, roomId, myName, startPosition
 
   const onNameChange = useRecoilCallback(({ set }) => (peerId: string, name: string) => {
     set(nameFamilyById(peerId), name)
+  },)
+
+  const onAvatarUrlChange = useRecoilCallback(({ set }) => (peerId: string, name: string) => {
+    set(avatarUrlFamilyById(peerId), name)
   },)
 
   // 座標に変化があった時

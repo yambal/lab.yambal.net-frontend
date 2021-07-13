@@ -5,6 +5,7 @@ import { theme } from '../style/theme'
 import { Provider } from 'react-redux'
 import { store } from './store'
 import { RecoilRoot } from 'recoil'
+import { FirebaseInitializer } from '../components/reactFirebase/FirebaseInitializer'
 
 type ProviderProps = {
   children: ReactNode
@@ -14,10 +15,11 @@ export function AppProvider({ children }: ProviderProps) {
   return (
     <Provider store={store}>
       <RecoilRoot>
-      <ThemeProvider theme={theme}>
-        <GlobalStyle />
-          {children}
-      </ThemeProvider>
+        <FirebaseInitializer />
+        <ThemeProvider theme={theme}>
+          <GlobalStyle />
+            {children}
+        </ThemeProvider>
       </RecoilRoot>
     </Provider>
   )

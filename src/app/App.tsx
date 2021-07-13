@@ -8,11 +8,9 @@ import {
 } from 'react-router-dom'
 import { CounterContainer } from '../features/counter/CounterContainer'
 import { DashboadContainer } from '../features/home/DashboadContainer'
-import { SuspenseComtainer } from '../features/sandbox/suspence/SuspenseComtainer'
 import { Nav, NavBar, NavItem } from '../components/bootstrap'
 import { x } from '@xstyled/styled-components'
-import { SandboxContainer } from '../features/sandbox/SandboxContainer'
-import { PlaceContainer } from '../features/room/PlaceContainer'
+// import { RoomContainer } from '../features/room/Room'
 
 export const App: React.FC = () => {
   return (
@@ -27,9 +25,7 @@ export const App: React.FC = () => {
       </NavBar>
       <x.div mt="56px">
         <Switch>
-          <Route path="/room" component={() => <PlaceContainer />} />
           <Route path="/counter" component={() => <CounterContainer />} />
-          <Route path="/sandbox" component={() => <SandboxContainer />} />
           <Route path="/" component={() => <DashboadContainer />} />
         </Switch>
       </x.div>

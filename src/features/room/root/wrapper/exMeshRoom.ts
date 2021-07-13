@@ -15,12 +15,16 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   let __memberNames: {
     [peerId: string]: string
   } = {}
+  let __memberAvatarUrls: {
+    [peerId: string]: string
+  } = {}
   let __memberStreams: {
     [peerId: string]: MediaStream
   } = {}
 
   let __myName: string = option?.myName || ''
   let __myPosition: ExMemberPosition = option.startPosition
+  let __myAvaterUrl: string = option.avatarUrl
 
   // on data : 他のユーザーから送信されたデータを受信した時に発生します。
   room.on('data', ({ src, data }) => {
@@ -57,11 +61,11 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
           case 'ping': 
             // Pingを受信
             resPing(src)
-            addMember(src, recieveLibSendData.name, recieveLibSendData.position)
+            addMember(src, recieveLibSendData.name, recieveLibSendData.avaterUrl, recieveLibSendData.position)
             break;
           case `res_ping`:
             // Ping応答を受信
-            addMember(src, recieveLibSendData.name, recieveLibSendData.position)
+            addMember(src, recieveLibSendData.name, recieveLibSendData.avaterUrl, recieveLibSendData.position)
             break;
           case `change_name`:
             // 名前変更を受信
@@ -87,8 +91,9 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   }
 
   // メンバー
-  const addMember = (peerId: string, name: string, position: ExMemberPosition) => {
+  const addMember = (peerId: string, name: string, avatarUrl: string, position: ExMemberPosition) => {
     setName(peerId, name)
+    setAvatarUrl(peerId, avatarUrl)
     setPosition(peerId, position)
     setDistance(peerId, position)
     setId(peerId)
@@ -97,6 +102,7 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
   const removeMember = (peerId:string) => {
     removePosition(peerId)
     removeName(peerId)
+    removeAvatarUrl(peerId)
     removeId(peerId)
     removeStream(peerId)
   }
@@ -114,6 +120,21 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
     const newMemberNames = Object.assign({}, __memberNames)
     delete newMemberNames[peerId]
     __memberNames = newMemberNames
+    /** Family 側は onPeerLeave で削除 */
+  }
+
+  const setAvatarUrl = (peerId: string, avatarUrl: string) => {
+    const add = {}
+    add[peerId] = avatarUrl
+    const newMemberAvatarUrls = Object.assign({}, __memberAvatarUrls, add)
+    __memberAvatarUrls = newMemberAvatarUrls
+    option.onAvatarUrlChange && option.onAvatarUrlChange(peerId, avatarUrl)
+  }
+
+  const removeAvatarUrl  = (peerId: string) => {
+    const newMemberAvatarUrls = Object.assign({}, __memberAvatarUrls)
+    delete newMemberAvatarUrls[peerId]
+    __memberAvatarUrls = newMemberAvatarUrls
     /** Family 側は onPeerLeave で削除 */
   }
 
@@ -176,6 +197,7 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
       dataType: "ping",
       to: 'all',
       name: getMyName(),
+      avaterUrl: __myAvaterUrl,
       position: __myPosition
     }
     room.send(data)
@@ -187,7 +209,8 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
       dataType: 'res_ping',
       to: to,
       name: getMyName(),
-      position: getMyPosision()
+      avaterUrl: getMyAvatarUrl(),
+      position: getMyPosision(),
     }
     room.send(ping_res_data)
   }
@@ -249,6 +272,10 @@ export const roomExtention: RoomExtention = (room, peerId: string, option?) => {
 
   const getMyName = () => {
     return __myName
+  }
+
+  const getMyAvatarUrl = () => {
+    return __myAvaterUrl
   }
 
   const getMyPosision = () => {

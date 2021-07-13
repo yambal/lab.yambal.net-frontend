@@ -32,9 +32,11 @@ export type ExMethods = {
 
 type ExOption = {
   myName?: string
+  avatarUrl: string
   startPosition?: ExMemberPosition
   onIdsChange: (meshRoomMemberIds: string[])=> void
   onNameChange: (peerId: string, name: string) => void,
+  onAvatarUrlChange: (peerId: string, avatarUrl: string) => void,
   onPositionChange: (peerId, position: ExMemberPosition) => void
   onDistanceChange: (peerId: string, distance:number) => void
   onData: (src: string, data: {}) => void
@@ -50,6 +52,7 @@ export type LibSendData = {
   dataType: LibSendDataDataType
   to: 'all' | string
   name?: string
+  avaterUrl?: string
   position?: ExMemberPosition
 }
 

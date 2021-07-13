@@ -6,6 +6,7 @@ module.exports = {
   entry: "./src/main.tsx",
   output: {
     path: `${__dirname}/dist`,
+    publicPath: '/',
     filename: "main.[hash].bundle.js"
   },
   module: {
@@ -31,6 +32,9 @@ module.exports = {
     port: 8080,
     contentBase: 'dist',
     open: true,
-    hot: true
+    hot: true,
+    historyApiFallback: {
+      rewrites: [{ from: /^\/*/, to: '/index.html' }],
+    }
   }
 };

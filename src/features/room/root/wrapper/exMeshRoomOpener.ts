@@ -13,7 +13,16 @@ import { ExMeshRoom, ExMeshRoomOpenerOption } from "./exMeshRoomTypes"
 
 
 export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: ExMeshRoomOpenerOption): Promise<ExMeshRoom> => {
-  const { onIdsChange, onNameChange, onPositionChange, onDistanceChange, onData, onStream, onPeerLeave } = option
+  const {
+    onIdsChange,
+    onNameChange,
+    onAvatarUrlChange,
+    onPositionChange,
+    onDistanceChange,
+    onData,
+    onStream,
+    onPeerLeave
+  } = option
   
   return new Promise((resolve, reject) => {
     
@@ -25,9 +34,11 @@ export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: ExMeshRoom
       const exMeshRoom: ExMeshRoom = room
       exMeshRoom['ex'] = roomExtention(room, peer.id, {
         myName: option?.myName,
+        avatarUrl: option.avatarUrl,
         startPosition: option?.startPosition,
         onIdsChange,
         onNameChange,
+        onAvatarUrlChange,
         onPositionChange,
         onDistanceChange,
         onData,
@@ -52,7 +63,7 @@ export const exMeshRoomOpener = (peer: Peer, roomId: string, option?: ExMeshRoom
  * @returns 
  */
 
-export const meshRoomOpener = (peer: Peer, roomId: string, stream?: MediaStream): Promise<MeshRoom> => {
+const meshRoomOpener = (peer: Peer, roomId: string, stream?: MediaStream): Promise<MeshRoom> => {
   return new Promise((resolve, reject) => {
     const room: MeshRoom = peer.joinRoom(roomId, {
       mode: 'mesh',

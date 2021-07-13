@@ -1,25 +1,28 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SystemProps, x } from '@xstyled/styled-components'
 import Peer from 'skyway-js';
-import { MeshRoomRoot } from './root/MeshRoomRoot'
-import { PeerRoot } from './root/PeerRoot'
-import { SvgPlaceRooomComponent } from './svgPlaceRooom/SvgPlaceRooomComponent'
+import { MeshRoomRoot } from '../root/MeshRoomRoot'
+import { PeerRoot } from '../root/PeerRoot'
+import { SvgPlaceRooomComponent } from '../svgPlaceRooom/SvgPlaceRooomComponent'
 import Measure from 'react-measure'
-import {UsersComponant} from './UsersComponant'
 
 let __peer: Peer | undefined
 let __stream: MediaStream | undefined
 
 type PlaceContainerProps = SystemProps & {
-
+  userName:string
+  avatarUrl: string
 }
 
 export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(function Button(
   {
+    userName,
+    avatarUrl,
     ...restProps
   },
   ref
 ) {
+
   const [peer, setPeer] = useState<Peer | undefined>(undefined)
   const [stream, setStream] = useState<MediaStream | undefined>(undefined)
   const [bouns, setBouns] = useState<{w: number, h:number} | undefined>({ w: 640, h: 640 })
@@ -56,7 +59,8 @@ export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(fu
             aliKey="42f75ed0-a9ff-4f07-ad83-cecc2daa274c"
             onPeer={onPeer}
             onMediaStream={onMediaStream}
-            peerUserNameLabel={`user: ${new Date()}`}
+            peerUserNameLabel={userName}
+            avatarUrl={avatarUrl}
           >
             {stream && <MeshRoomRoot
               peer={peer}
@@ -68,13 +72,6 @@ export const PlaceContainer: React.FC<PlaceContainerProps> = React.forwardRef(fu
                 height={bouns.h}
               />
             </MeshRoomRoot>}
-
-            <MeshRoomRoot
-              peer={peer}
-              roomId="users"
-            >
-              <UsersComponant />
-            </MeshRoomRoot>
           </PeerRoot>
         </x.div>
       )}

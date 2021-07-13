@@ -1,7 +1,7 @@
 import React, { MouseEventHandler, useCallback, MouseEvent, useEffect, useMemo, } from 'react';
 
 import { useRecoilValue } from "recoil"
-import { distanceFamilyById, nameFamilyById, positionFamilyById } from "../peerAtom"
+import { distanceFamilyById, nameFamilyById, avatarUrlFamilyById, positionFamilyById } from "../logined/peerAtom"
 
 type SvgPlaceRoomMemberComponentProps = {
   peerId: string
@@ -11,6 +11,7 @@ type SvgPlaceRoomMemberComponentProps = {
 
 export const SvgPlaceRoomMemberComponent = ({peerId, size, color}: SvgPlaceRoomMemberComponentProps) => {
   const name = useRecoilValue(nameFamilyById(peerId))
+  const avaterUrl = useRecoilValue(avatarUrlFamilyById(peerId))
   const position = useRecoilValue(positionFamilyById(peerId))
   const distance = useRecoilValue(distanceFamilyById(peerId))
 
@@ -21,11 +22,22 @@ export const SvgPlaceRoomMemberComponent = ({peerId, size, color}: SvgPlaceRoomM
     position ? <g
       transform={`translate(${position?.x} ${position?.y})`}
     >
-      <circle
-        cx={0}
-        cy={0}
-        r={size}
-        fill={color}
+      <clipPath id={`clip-${peerId}`}>
+        <circle
+          cx={0}
+          cy={0}
+          r={size}
+          fill="red"
+        />
+      </clipPath>
+      <image
+        href={`${avaterUrl}`}
+        clipPath={`url(#clip-${peerId})`}
+        height={size * 2}
+        width={size * 2}
+        x={-size}
+        y={-size}
+        preserveAspectRatio="xMidYMid slice"
       />
       <text
         style={{userSelect: 'none', fontSize: '1.5rem'}}

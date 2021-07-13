@@ -1,3 +1,6 @@
 [submodule "src/components/bootstrap"]
 	path = src/components/bootstrap
 	url = git@github.com:yambal/React-Bootstrap.git
+[submodule "src/components/reactFirebase"]
+	path = src/components/reactFirebase
+	url = https://github.com/yambal/React-Firebase.git
